@@ -31,33 +31,8 @@ Check the [SwaggerUI](https://ani-notify.tohjuler.dk/ui)
 
 ## 🔨Setup
 
-### ⚙️Environment Variables
-
-```
-# Used for Prisma. Read about it here https://www.prisma.io/docs/orm/reference/connection-urls
-DATABASE_URL="file:./db.db"
-
-# Host your own from here https://github.com/consumet/api.consumet.org
-CONSUMET_URL=""
-
-# Remove the CRON variable to disable the cron job
-# This is the job for check for new episodes.
-CRON="*/60 * * * *" 
-
-# The amount of days where a ep is considered new, and will be shows in notifications
-NEW_EP_TIME="5" 
-
-# To edit or delete a user you will need the id (uuid) and the username.
-# There are no sensitive data in the user table.
-ALLOW_EDIT="true"
-ALLOW_DELETE="true"
-
-# SENTRY_DSN="<sentry_dsn>" # By default is to use Tohjuler's DSN, and is recommended to keep it like that.
-# DISABLE_SENTRY_DSN="true" # Outcomment this line to disable Sentry
-```
-
 ### 📊Metrics
-You can hook prometheus up to `/metrics` for metrics.
+You can hook Prometheus up to `/metrics` for metrics.
 
 ### 💻Local Development
 1. Clone the repo

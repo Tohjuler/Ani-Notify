@@ -20,5 +20,6 @@ export type AnimeStatus = "RELEASING" | "FINISHED" | "NOT_YET_RELEASED";
 export interface AnimeInfo {
     id: string;
     title: string;
-    status: AnimeStatus
+    status: AnimeStatus;
+    totalEps: number;
 }

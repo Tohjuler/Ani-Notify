@@ -14,6 +14,7 @@ model Anime {
   id       String    @id
   title    String?
   status   String // RELEASING, FINISHED, NOT_YET_RELEASED
+  totalEps Int
   episodes Episode[]
   users    User[]
 
@@ -22,12 +23,13 @@ model Anime {
 }
 
 model Episode {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   title     String?
   number    Int
   providers String
   dub       Boolean
   animeId   String?
+  releaseAt DateTime
 
   anime     Anime?   @relation(fields: [animeId], references: [id])
   createdAt DateTime @default(now())

@@ -50,6 +50,7 @@ export async function getNewEps(
                     dub: dub,
                     providers: provider,
                     title: ep.title,
+                    releaseAt: ep.createdAt,
                 },
             });
         }
@@ -96,6 +97,10 @@ export async function getNewEps(
             });
     }
 
+    // Check if the totalAmount of is reached
+    if (anime.totalEps <= anime.episodes.length + newEps.length)
+        updateStatus(anime);
+
     return newEps;
 }
 
@@ -133,6 +138,7 @@ export async function addEps(animeId: string) {
                     dub: dub,
                     providers: provider,
                     title: ep.title,
+                    releaseAt: ep.createdAt,
                 },
             });
         }
@@ -180,7 +186,35 @@ export async function fetchAnimeInfo(
                 id: res.data.id,
                 title: res.data.romaji,
                 status,
+                totalEps: res.data.totalEpisodes,
             };
         })
         .catch(() => undefined);
+}
+
+async function updateStatus(anime: Anime) {
+    const newInfo = await fetchAnimeInfo(anime.id);
+    if (!newInfo) {
+        console.log(`Failed to fetch anime info for ${anime.id}`);
+        return;
+    }
+
+    if (newInfo.status !== anime.status)
+        await db.anime.update({
+            where: {
+                id: anime.id,
+            },
+            data: {
+                status: newInfo.status,
+            },
+        });
+    if (newInfo.totalEps !== anime.totalEps)
+        await db.anime.update({
+            where: {
+                id: anime.id,
+            },
+            data: {
+                totalEps: newInfo.totalEps,
+            },
+        });
 }
