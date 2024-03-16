@@ -51,7 +51,13 @@ NEW_EP_TIME="5"
 # There are no sensitive data in the user table.
 ALLOW_EDIT="true"
 ALLOW_DELETE="true"
+
+# SENTRY_DSN="<sentry_dsn>" # By default is to use Tohjuler's DSN, and is recommended to keep it like that.
+# DISABLE_SENTRY_DSN="true" # Outcomment this line to disable Sentry
 ```
+
+### 📊Metrics
+You can hook prometheus up to `/metrics` for metrics.
 
 ### 💻Local Development
 1. Clone the repo
