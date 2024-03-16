@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@hono/swagger-ui": "^0.2.1",
+    "@hono/zod-openapi": "^0.9.8",
+    "@prisma/client": "^5.11.0",
+    "@types/node-cron": "^3.0.11",
+    "axios": "^1.6.7",
+    "hono": "^4.0.10",
+    "node-cron": "^3.0.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prisma": "^5.11.0"
+  }
+}
