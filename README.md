@@ -75,7 +75,7 @@ Run the image:
 docker run -d -it \
 --name Ani-Notify \
 -p 3000:3000 \
--v .env/.env:/usr/src/app/.env \
+-v .env:/usr/src/app/.env \
 -v ./db.db:/usr/src/app/prisma/db.db \
 ghcr.io/tohjuler/ani-notify:latest
 ```
