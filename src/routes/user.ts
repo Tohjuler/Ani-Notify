@@ -143,7 +143,10 @@ route.openapi(registerRoute, async (c) => {
     const { id, username, discord_webhook, ntfy_url, animes } =
         c.req.valid("json");
 
-    if (animes) await addAnimesIfNotFound(animes);
+    if (animes)
+        await addAnimesIfNotFound(animes).catch((e) =>
+            c.get("sentry").captureException(e)
+        );
 
     const res = await db.user
         .create({
@@ -165,7 +168,8 @@ route.openapi(registerRoute, async (c) => {
         .catch((e) => {
             if (e.code === "P2002")
                 return c.json({ error: "Username already taken" }, 400);
-            else return c.json({ error: "An error occurred" }, 500);
+            c.get("sentry").captureException(e);
+            return c.json({ error: "An error occurred" }, 500);
         });
 
     return res ? res : c.json({ success: true });
@@ -244,7 +248,10 @@ route.openapi(UpdateRoute, async (c) => {
             },
         })
         .then(() => null)
-        .catch((e) => c.json({ error: "An error occurred" }, 500));
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return c.json({ error: "An error occurred" }, 500);
+        });
 
     return res ? res : c.json({ success: true });
 });
@@ -316,7 +323,10 @@ route.openapi(deleteRoute, async (c) => {
             where: { id, username },
         })
         .then(() => null)
-        .catch((e) => c.json({ error: "An error occurred" }, 500));
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return c.json({ error: "An error occurred" }, 500);
+        });
 
     return res ? res : c.json({ success: true });
 });

@@ -18,7 +18,8 @@ const subscribeRoute = createRoute({
                             id: z.string(),
                             username: z.string(),
                             animeId: z.string(),
-                        }).openapi({
+                        })
+                        .openapi({
                             required: ["username", "id", "animeId"],
                         }),
                 },
@@ -75,37 +76,49 @@ const subscribeRoute = createRoute({
 route.openapi(subscribeRoute, async (c) => {
     const { id, username, animeId } = c.req.valid("json");
 
-    const user = await db.user.findUnique({
-        where: { id, username }
-    })
+    const user = await db.user
+        .findUnique({
+            where: { id, username },
+        })
         .then((res) => res)
-        .catch(() => null)
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return null;
+        });
 
     if (!user) return c.json({ error: "User not found" }, 404);
 
-    const anime = await db.anime.findUnique({
-        where: { id: animeId }
-    })
+    const anime = await db.anime
+        .findUnique({
+            where: { id: animeId },
+        })
         .then((res) => res)
-        .catch(() => null)
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return null;
+        });
 
     if (!anime) return c.json({ error: "Anime not found" }, 404);
 
-    const res = await db.user.update({
-        where: { id, username },
-        data: {
-            animes: {
-                connect: {
-                    id: animeId
-                }
-            }
-        }
-    })
+    const res = await db.user
+        .update({
+            where: { id, username },
+            data: {
+                animes: {
+                    connect: {
+                        id: animeId,
+                    },
+                },
+            },
+        })
         .then(() => null)
-        .catch(() => c.json({ error: "An error occurred" }, 500))
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return c.json({ error: "An error occurred" }, 500);
+        });
 
     return res ? res : c.json({ success: true });
-})
+});
 
 // post /anime/unsubscribe
 
@@ -121,7 +134,8 @@ const unsubscribeRoute = createRoute({
                             id: z.string(),
                             username: z.string(),
                             animeId: z.string(),
-                        }).openapi({
+                        })
+                        .openapi({
                             required: ["username", "id", "animeId"],
                         }),
                 },
@@ -178,36 +192,48 @@ const unsubscribeRoute = createRoute({
 route.openapi(unsubscribeRoute, async (c) => {
     const { id, username, animeId } = c.req.valid("json");
 
-    const user = await db.user.findUnique({
-        where: { id, username }
-    })
+    const user = await db.user
+        .findUnique({
+            where: { id, username },
+        })
         .then((res) => res)
-        .catch(() => null)
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return null;
+        });
 
     if (!user) return c.json({ error: "User not found" }, 404);
 
-    const anime = await db.anime.findUnique({
-        where: { id: animeId }
-    })
+    const anime = await db.anime
+        .findUnique({
+            where: { id: animeId },
+        })
         .then((res) => res)
-        .catch(() => null)
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return null;
+        });
 
     if (!anime) return c.json({ error: "Anime not found" }, 404);
 
-    const res = await db.user.update({
-        where: { id, username },
-        data: {
-            animes: {
-                disconnect: {
-                    id: animeId
-                }
-            }
-        }
-    })
+    const res = await db.user
+        .update({
+            where: { id, username },
+            data: {
+                animes: {
+                    disconnect: {
+                        id: animeId,
+                    },
+                },
+            },
+        })
         .then(() => null)
-        .catch(() => c.json({ error: "An error occurred" }, 500))
+        .catch((e) => {
+            c.get("sentry").captureException(e);
+            return c.json({ error: "An error occurred" }, 500);
+        });
 
     return res ? res : c.json({ success: true });
-})
+});
 
 export default route;
