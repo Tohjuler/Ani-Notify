@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "prisma migrate deploy && bun run src/index.ts"
+    "start": "prisma generate && prisma migrate deploy && bun run src/index.ts"
   },
   "dependencies": {
     "@hono/prometheus": "^1.0.0",
