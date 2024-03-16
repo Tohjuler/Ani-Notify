@@ -35,7 +35,7 @@ Check the [SwaggerUI](https://ani-notify.tohjuler.dk/ui)
 
 ```
 # Used for Prisma. Read about it here https://www.prisma.io/docs/orm/reference/connection-urls
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="file:./db.db"
 
 # Host your own from here https://github.com/consumet/api.consumet.org
 CONSUMET_URL=""
@@ -66,7 +66,26 @@ You can hook prometheus up to `/metrics` for metrics.
 4. Start the server `bun run dev`
 
 ### 🖥️Docker
-Comming...
+Get the .env.example file from the repo, edit it and then rename it to .env
+
+This example expects you use the default database setup from .env.example
+<br>
+Run the image:
+```bash
+docker run -d -it \
+--name Aniplay \
+-p 3000:3000 \
+-v .env/.env:/usr/src/app/.env \
+-v db.db:/usr/src/app/prisma/db.db \
+ghcr.io/tohjuler/ani-notify:latest
+```
+
+For at full stack deploy (app and consumet api)
+See [docker-compose.yml](https://github.com/Tohjuler/Ani-Notify/blob/master/docker-compose.yml)
+
+Access the api at ``http://localhost:3000``
+<br>
+and the Swagger UI at ``http://localhost:3000/ui``
 
 ## 📝Contribution
 Contributions are always welcome!

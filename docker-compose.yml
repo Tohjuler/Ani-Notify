@@ -1,0 +1,17 @@
+version: "3.3"
+services:
+  ani-notify:
+    container_name: Ani-Notify
+    restart: always
+    ports:
+      - 3000:3000
+    image: ghcr.io/tohjuler/ani-notify:latest
+    links:
+      - consumet:consumet
+    volumes:
+      - .env:/usr/src/app/.env
+      - db.db:/usr/src/app/prisma/db.db
+  consumet:
+    image: riimuru/consumet-api
+    restart: always
+networks: {}
