@@ -73,7 +73,7 @@ This example expects you use the default database setup from .env.example
 Run the image:
 ```bash
 docker run -d -it \
---name Aniplay \
+--name Ani-Notify \
 -p 3000:3000 \
 -v .env/.env:/usr/src/app/.env \
 -v db.db:/usr/src/app/prisma/db.db \
