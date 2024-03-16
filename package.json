@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "bun run src/index.ts"
+    "start": "prisma migrate deploy && bun run src/index.ts"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.2.1",
@@ -11,10 +11,10 @@
     "axios": "^1.6.7",
     "hono": "^4.0.10",
     "node-cron": "^3.0.3",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "prisma": "^5.11.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "prisma": "^5.11.0"
+    "@types/bun": "latest"
   }
 }
