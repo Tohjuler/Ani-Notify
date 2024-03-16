@@ -10,7 +10,7 @@ services:
       - consumet:consumet
     volumes:
       - .env:/usr/src/app/.env
-      - db.db:/usr/src/app/prisma/db.db
+      - ./db.db:/usr/src/app/prisma/db.db
   consumet:
     image: riimuru/consumet-api
     restart: always
