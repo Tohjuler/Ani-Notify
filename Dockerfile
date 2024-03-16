@@ -3,6 +3,7 @@ WORKDIR /usr/src/app
 
 COPY . .
 RUN bun i
+RUN bunx prisma generate
 
 ENV NODE_ENV=production
 
