@@ -12,7 +12,7 @@ datasource db {
 
 model Anime {
   id       String    @id
-  title    String
+  title    String?
   status   String // RELEASING, FINISHED, NOT_YET_RELEASED
   episodes Episode[]
   users    User[]
@@ -23,7 +23,7 @@ model Anime {
 
 model Episode {
   id        Int     @id @default(autoincrement())
-  title     String
+  title     String?
   number    Int
   providers String
   dub       Boolean

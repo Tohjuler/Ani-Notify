@@ -64,11 +64,12 @@ const getRoute = createRoute({
 route.openapi(getRoute, async (c) => {
     const { id, username } = c.req.valid("param");
 
-    const user = await db.user.findUnique({
-        where: { id, username }
-    })
+    const user = await db.user
+        .findUnique({
+            where: { id, username },
+        })
         .then((res) => res)
-        .catch(() => null)
+        .catch(() => null);
 
     return user ? c.json(user) : c.json({ error: "User not found" }, 404);
 });
@@ -84,11 +85,17 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z
                         .object({
-                            id: z.string().nullable(),
+                            id: z.string().nullable().default(null),
                             username: z.string(),
-                            discord_webhook: z.string().nullable(),
-                            ntfy_url: z.string().nullable(),
-                            animes: z.array(z.string()).nullable(),
+                            discord_webhook: z
+                                .string()
+                                .nullable()
+                                .default(null),
+                            ntfy_url: z.string().nullable().default(null),
+                            animes: z
+                                .array(z.string())
+                                .nullable()
+                                .default(null),
                         })
                         .openapi({
                             required: ["username"],
@@ -133,32 +140,36 @@ const registerRoute = createRoute({
 });
 
 route.openapi(registerRoute, async (c) => {
-    const { id, username, discord_webhook, ntfy_url, animes } = c.req.valid("json");
+    const { id, username, discord_webhook, ntfy_url, animes } =
+        c.req.valid("json");
 
-    if (animes)
-        await addAnimesIfNotFound(animes);
+    if (animes) await addAnimesIfNotFound(animes);
 
-    const res = await db.user.create({
-        data: {
-            ...(id ? { id } : {}),
-            username,
-            discord_webhook,
-            ntfy_url,
-            ...(animes ? {
-                animes: {
-                    connect: animes.map((id: string) => ({ id }))
-                }
-            } : {})
-        }
-    })
+    const res = await db.user
+        .create({
+            data: {
+                ...(id ? { id } : {}),
+                username,
+                discord_webhook,
+                ntfy_url,
+                ...(animes
+                    ? {
+                          animes: {
+                              connect: animes.map((id: string) => ({ id })),
+                          },
+                      }
+                    : {}),
+            },
+        })
         .then(() => null)
         .catch((e) => {
-            if (e.code === "P2002") return c.json({ error: "Username already taken" }, 400);
+            if (e.code === "P2002")
+                return c.json({ error: "Username already taken" }, 400);
             else return c.json({ error: "An error occurred" }, 500);
-        })
+        });
 
     return res ? res : c.json({ success: true });
-})
+});
 
 // PUT /user/update
 
@@ -221,20 +232,22 @@ const UpdateRoute = createRoute({
 route.openapi(UpdateRoute, async (c) => {
     const { id, username, discord_webhook, ntfy_url } = c.req.valid("json");
 
-    if (process.env.ALLOW_EDIT !== "true") return c.json({ error: "Editing is disabled" }, 403);
+    if (process.env.ALLOW_EDIT !== "true")
+        return c.json({ error: "Editing is disabled" }, 403);
 
-    const res = await db.user.update({
-        where: { id, username },
-        data: {
-            discord_webhook,
-            ntfy_url
-        }
-    })
+    const res = await db.user
+        .update({
+            where: { id, username },
+            data: {
+                discord_webhook,
+                ntfy_url,
+            },
+        })
         .then(() => null)
-        .catch((e) => c.json({ error: "An error occurred" }, 500))
+        .catch((e) => c.json({ error: "An error occurred" }, 500));
 
     return res ? res : c.json({ success: true });
-})
+});
 
 // DELETE /user/delete
 
@@ -295,15 +308,17 @@ const deleteRoute = createRoute({
 route.openapi(deleteRoute, async (c) => {
     const { id, username } = await c.req.json();
 
-    if (process.env.ALLOW_DELETE !== "true") return c.json({ error: "Deletion is disabled" }, 403);
+    if (process.env.ALLOW_DELETE !== "true")
+        return c.json({ error: "Deletion is disabled" }, 403);
 
-    const res = await db.user.delete({
-        where: { id, username }
-    })
+    const res = await db.user
+        .delete({
+            where: { id, username },
+        })
         .then(() => null)
-        .catch((e) => c.json({ error: "An error occurred" }, 500))
+        .catch((e) => c.json({ error: "An error occurred" }, 500));
 
     return res ? res : c.json({ success: true });
-})
+});
 
 export default route;
