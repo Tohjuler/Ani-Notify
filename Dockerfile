@@ -1,9 +1,14 @@
-FROM oven/bun:latest
+FROM imbios/bun-node:latest
 WORKDIR /usr/src/app
 
-COPY . .
-RUN bun i
-RUN bunx prisma generate
+COPY package.json .
+COPY bun.lockb .
+
+RUN bun install --production
+
+COPY src src
+COPY tsconfig.json .
+COPY prisma prisma
 
 ENV NODE_ENV=production
 
