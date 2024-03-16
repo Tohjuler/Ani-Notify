@@ -9,7 +9,6 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { sentry } from "@hono/sentry";
 import { prometheus } from "@hono/prometheus";
-import { compress } from "hono/compress";
 
 const app = new OpenAPIHono();
 
@@ -28,7 +27,6 @@ if (process.env.DISABLE_SENTRY_DSN !== "true")
         })
     );
 app.use(logger());
-app.use(compress());
 app.use("*", registerMetrics);
 
 // I was not able to get the ip. I will try to fix it later
@@ -63,11 +61,11 @@ app.use("*", registerMetrics);
 app.get("/metrics", printMetrics);
 
 app.get("/", async (c) => {
-    return c.text("Welcome to Ani-Notify!");
+    return c.render(fs.readFileSync("./src/routes/index.html", "utf-8"));
 });
 
 const routesPath = path.join(__dirname, "routes");
-for (const file of fs.readdirSync(routesPath))
+for (const file of fs.readdirSync(routesPath).filter((f) => f.endsWith(".ts")))
     app.route(
         file.replace(".ts", ""),
         require(path.join(routesPath, file)).default
