@@ -26,7 +26,8 @@ if (process.env.DISABLE_SENTRY_DSN !== "true")
 app.use(logger());
 app.use("*", registerMetrics);
 
-if (process.env.API_KEY) app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
+if (process.env.API_KEY)
+    app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
 
 // I was not able to get the ip. I will try to fix it later
 
