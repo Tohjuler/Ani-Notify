@@ -4,7 +4,7 @@ export interface ConsumetEpisode {
     image: string;
     imageHash: string;
     number: number;
-    createdAt: string;
+    createdAt?: string;
     description: string;
     url: string;
 }

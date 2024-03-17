@@ -50,7 +50,7 @@ export async function getNewEps(
                     dub: dub,
                     providers: provider,
                     title: ep.title,
-                    releaseAt: ep.createdAt,
+                    releaseAt: ep.createdAt ?? new Date(),
                 },
             });
         }
@@ -138,7 +138,7 @@ export async function addEps(animeId: string) {
                     dub: dub,
                     providers: provider,
                     title: ep.title,
-                    releaseAt: ep.createdAt,
+                    releaseAt: ep.createdAt ?? new Date(),
                 },
             });
         }
@@ -184,7 +184,7 @@ export async function fetchAnimeInfo(
 
             return {
                 id: res.data.id,
-                title: res.data.romaji,
+                title: res.data.title.romaji,
                 status,
                 totalEps: res.data.totalEpisodes,
             };
