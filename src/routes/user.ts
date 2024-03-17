@@ -1,7 +1,9 @@
+import { User } from "@prisma/client";
 import db from "../lib/db";
 import { addAnimeIfNotFound as addAnimesIfNotFound } from "../util/animeUtil";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
+import { TypedResponse } from "hono/types";
 
 const route = new OpenAPIHono();
 
@@ -110,6 +112,14 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z.object({
                         success: z.boolean(),
+                        user: z.object({
+                            id: z.string(),
+                            username: z.string(),
+                            discord_webhook: z.string().nullable(),
+                            ntfy_url: z.string().nullable(),
+                            createdAt: z.string(),
+                            updatedAt: z.string(),
+                        }),
                     }),
                 },
             },
@@ -148,31 +158,43 @@ route.openapi(registerRoute, async (c) => {
             c.get("sentry").captureException(e)
         );
 
-    const res = await db.user
-        .create({
-            data: {
-                ...(id ? { id } : {}),
-                username,
-                discord_webhook,
-                ntfy_url,
-                ...(animes
-                    ? {
-                          animes: {
-                              connect: animes.map((id: string) => ({ id })),
-                          },
-                      }
-                    : {}),
-            },
-        })
-        .then(() => null)
-        .catch((e) => {
-            if (e.code === "P2002")
-                return c.json({ error: "Username already taken" }, 400);
-            c.get("sentry").captureException(e);
-            return c.json({ error: "An error occurred" }, 500);
-        });
+    const res: { user?: User; error?: any } =
+        await db.user
+            .create({
+                data: {
+                    ...(id ? { id } : {}),
+                    username,
+                    discord_webhook,
+                    ntfy_url,
+                    ...(animes
+                        ? {
+                              animes: {
+                                  connect: animes.map((id: string) => ({ id })),
+                              },
+                          }
+                        : {}),
+                },
+            })
+            .then((res) => ({
+                user: res
+            }))
+            .catch((e) => {
+                if (e.code === "P2002")
+                    return {
+                        error: c.json({ error: "Username already taken" }, 400),
+                    };
+                c.get("sentry").captureException(e);
+                return {
+                    error: c.json({ error: "An error occurred" }, 500),
+                };
+            });
 
-    return res ? res : c.json({ success: true });
+    return res.error
+        ? res.error
+        : c.json({
+              success: true,
+              user: res.user,
+          });
 });
 
 // PUT /user/update
