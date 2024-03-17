@@ -184,7 +184,7 @@ export async function fetchAnimeInfo(
 
             return {
                 id: res.data.id,
-                title: res.data.title.romaji,
+                title: res.data.title[process.env.TITLE_TYPE || "english"],
                 status,
                 totalEps: res.data.totalEpisodes,
             };
