@@ -1,3 +1,4 @@
+import { Anime } from "@prisma/client";
 import db from "../lib/db";
 import { getNewEps } from "../util/consumet";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
@@ -11,6 +12,14 @@ interface Episode {
     providers: string;
     dub: boolean;
     releasedAt: string;
+    anime: {
+        id: string;
+        title: string | null;
+        status: string;
+        totalEps: number;
+        createdAt: string;
+        updatedAt: string;
+    } | null;
 }
 
 // GET /notifications/{userId}
@@ -41,6 +50,16 @@ const getRoute = createRoute({
                             providers: z.string(),
                             dub: z.boolean(),
                             releasedAt: z.string(),
+                            anime: z
+                                .object({
+                                    id: z.string(),
+                                    title: z.string().nullable(),
+                                    status: z.string(),
+                                    totalEps: z.number(),
+                                    createdAt: z.string(),
+                                    updatedAt: z.string(),
+                                })
+                                .nullable(),
                         })
                     ),
                 },
@@ -92,6 +111,9 @@ route.openapi(getRoute, async (c) => {
                     ), // Default 5 days
                 },
             },
+            include: {
+                anime: true,
+            },
         })
         .then((res) =>
             res.map((ep) => ({
@@ -100,6 +122,16 @@ route.openapi(getRoute, async (c) => {
                 providers: ep.providers,
                 dub: ep.dub,
                 releasedAt: ep.releaseAt.toISOString(),
+                anime: ep.anime
+                    ? {
+                          id: ep.anime.id,
+                          title: ep.anime.title,
+                          status: ep.anime.status,
+                          totalEps: ep.anime.totalEps,
+                          createdAt: ep.anime.createdAt.toISOString(),
+                          updatedAt: ep.anime.updatedAt.toISOString(),
+                      }
+                    : null,
             }))
         )
         .catch((e) => {
@@ -134,6 +166,14 @@ route.openapi(getRoute, async (c) => {
                             providers: ep.providers,
                             dub: ep.dub,
                             releasedAt: new Date().toISOString(),
+                            anime: {
+                                id: anime.id,
+                                title: anime.title,
+                                status: anime.status,
+                                totalEps: anime.totalEps,
+                                createdAt: anime.createdAt.toISOString(),
+                                updatedAt: anime.updatedAt.toISOString(),
+                            },
                         }))
                     );
                 }
