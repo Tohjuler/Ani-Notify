@@ -6,6 +6,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { sentry } from "@hono/sentry";
 import { prometheus } from "@hono/prometheus";
 import { bearerAuth } from "hono/bearer-auth";
+import { cors } from "hono/cors";
 
 const app = new OpenAPIHono();
 
@@ -25,6 +26,7 @@ if (process.env.DISABLE_SENTRY_DSN !== "true")
     );
 app.use(logger());
 app.use("*", registerMetrics);
+app.use(cors())
 
 if (process.env.API_KEY)
     app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
