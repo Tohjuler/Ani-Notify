@@ -5,6 +5,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
 import { sentry } from "@hono/sentry";
 import { prometheus } from "@hono/prometheus";
+import { bearerAuth } from "hono/bearer-auth";
 
 const app = new OpenAPIHono();
 
@@ -24,6 +25,8 @@ if (process.env.DISABLE_SENTRY_DSN !== "true")
     );
 app.use(logger());
 app.use("*", registerMetrics);
+
+if (process.env.API_KEY) app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
 
 // I was not able to get the ip. I will try to fix it later
 
@@ -63,7 +66,7 @@ app.get("/", async (c) => {
 const routesPath = path.join(__dirname, "routes");
 for (const file of fs.readdirSync(routesPath).filter((f) => f.endsWith(".ts")))
     app.route(
-        file.replace(".ts", ""),
+        "/api/" + file.replace(".ts", ""),
         require(path.join(routesPath, file)).default
     );
 
