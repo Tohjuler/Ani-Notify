@@ -40,7 +40,7 @@ export async function addAnimeIfNotFound(ids: string[]) {
                 where: { id },
             })
             .then(async (anime) => {
-                if (!anime) addAnime(id);
+                if (!anime) await addAnime(id);
             })
             .catch(() => {});
 }
