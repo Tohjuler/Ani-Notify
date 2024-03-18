@@ -183,6 +183,13 @@ route.openapi(registerRoute, async (c) => {
                     return {
                         error: c.json({ error: "Username already taken" }, 400),
                     };
+                c.get("sentry").setContext("user", {
+                    id,
+                    username,
+                    discord_webhook,
+                    ntfy_url,
+                    animes,
+                });
                 c.get("sentry").captureException(e);
                 return {
                     error: c.json({ error: "An error occurred" }, 500),
