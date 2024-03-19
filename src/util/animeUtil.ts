@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import db from "../lib/db";
 import { addEps, fetchAnimeInfo } from "./consumet";
-import { EventHint } from "@sentry/node";
+import { EventHint } from "@sentry/bun";
 
 export async function addAnime(id: string, user?: User): Promise<Error | null> {
     const anime = await fetchAnimeInfo(id);

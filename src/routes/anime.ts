@@ -1,6 +1,7 @@
 import db from "../lib/db";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
 
 const route = new OpenAPIHono();
 
@@ -82,7 +83,7 @@ route.openapi(subscribeRoute, async (c) => {
         })
         .then((res) => res)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return null;
         });
 
@@ -94,7 +95,7 @@ route.openapi(subscribeRoute, async (c) => {
         })
         .then((res) => res)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return null;
         });
 
@@ -113,7 +114,7 @@ route.openapi(subscribeRoute, async (c) => {
         })
         .then(() => null)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return c.json({ error: "An error occurred" }, 500);
         });
 
@@ -198,7 +199,7 @@ route.openapi(unsubscribeRoute, async (c) => {
         })
         .then((res) => res)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return null;
         });
 
@@ -210,7 +211,7 @@ route.openapi(unsubscribeRoute, async (c) => {
         })
         .then((res) => res)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return null;
         });
 
@@ -229,7 +230,7 @@ route.openapi(unsubscribeRoute, async (c) => {
         })
         .then(() => null)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return c.json({ error: "An error occurred" }, 500);
         });
 

@@ -3,6 +3,7 @@ import db from "../lib/db";
 import { getNewEps } from "../util/consumet";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
 
 const route = new OpenAPIHono();
 
@@ -160,7 +161,7 @@ route.openapi(getRoute, async (c) => {
             }))
         )
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return [];
         });
 
@@ -203,7 +204,7 @@ route.openapi(getRoute, async (c) => {
                     );
                 }
             })
-            .catch((e) => c.get("sentry").captureException(e));
+            .catch((e) => Sentry.captureException(e));
 
     const totalEps = await db.episode.count({
         where: {

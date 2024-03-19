@@ -3,7 +3,7 @@ import db from "../lib/db";
 import { addAnimeIfNotFound as addAnimesIfNotFound } from "../util/animeUtil";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
-import { TypedResponse } from "hono/types";
+import * as Sentry from "@sentry/bun";
 
 const route = new OpenAPIHono();
 
@@ -157,8 +157,8 @@ route.openapi(registerRoute, async (c) => {
         c.req.valid("json");
 
     if (animes) {
-        const failedAnimes: string[] | null = await addAnimesIfNotFound(animes, c.get("sentry").captureException).catch((e) => {
-            c.get("sentry").captureException(e)
+        const failedAnimes: string[] | null = await addAnimesIfNotFound(animes, Sentry.captureException).catch((e) => {
+            Sentry.captureException(e)
             return null;
         });
 
@@ -194,14 +194,14 @@ route.openapi(registerRoute, async (c) => {
                     return {
                         error: c.json({ error: "Username already taken" }, 400),
                     };
-                c.get("sentry").setContext("user", {
+                Sentry.setContext("user", {
                     id,
                     username,
                     discord_webhook,
                     ntfy_url,
                     animes,
                 });
-                c.get("sentry").captureException(e);
+                Sentry.captureException(e);
                 return {
                     error: c.json({ error: "An error occurred" }, 500),
                 };
@@ -289,7 +289,7 @@ route.openapi(UpdateRoute, async (c) => {
         })
         .then(() => null)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return c.json({ error: "An error occurred" }, 500);
         });
 
@@ -364,7 +364,7 @@ route.openapi(deleteRoute, async (c) => {
         })
         .then(() => null)
         .catch((e) => {
-            c.get("sentry").captureException(e);
+            Sentry.captureException(e);
             return c.json({ error: "An error occurred" }, 500);
         });
 

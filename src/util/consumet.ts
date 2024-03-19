@@ -186,8 +186,8 @@ export async function fetchAnimeInfo(
                 id: res.data.id,
                 title: res.data.title[process.env.TITLE_TYPE || "english"],
                 status,
-                totalEps: res.data.totalEpisodes,
-            };
+                totalEps: res.data.totalEpisodes ?? 0,
+            } as AnimeInfo;
         })
         .catch(() => undefined);
 }
