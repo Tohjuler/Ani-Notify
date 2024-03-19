@@ -7,6 +7,7 @@ import { prometheus } from "@hono/prometheus";
 import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import * as Sentry from "@sentry/bun";
+import startCron from "./util/cronChecks";
 
 const app = new OpenAPIHono();
 
@@ -102,5 +103,7 @@ app.doc("/doc", {
 });
 
 app.get("/ui", swaggerUI({ url: "/doc" }));
+
+startCron();
 
 export default app;
