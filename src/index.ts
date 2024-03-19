@@ -3,27 +3,45 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
-import { sentry } from "@hono/sentry";
 import { prometheus } from "@hono/prometheus";
 import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
+import * as Sentry from "@sentry/bun";
 
 const app = new OpenAPIHono();
 
 const { printMetrics, registerMetrics } = prometheus();
 
 // Middlewares
-if (process.env.DISABLE_SENTRY_DSN !== "true")
+if (process.env.DISABLE_SENTRY_DSN !== "true") {
+    Sentry.init({
+        dsn:
+            process.env.SENTRY_DSN ??
+            "https://513dd05fe7a697e50f87747cbd6b3108@o4506722572304384.ingest.us.sentry.io/4506920763129856",
+        environment: process.env.NODE_ENV,
+        enableTracing: true,
+        integrations: [
+            new Sentry.Integrations.Http({ tracing: true }),
+            new Sentry.Integrations.OnUncaughtException(),
+            new Sentry.Integrations.OnUnhandledRejection(),
+            new Sentry.Integrations.Console(),
+            new Sentry.Integrations.Prisma(),
+            new Sentry.Integrations.InboundFilters(),
+            new Sentry.Integrations.FunctionToString(),
+            new Sentry.Integrations.LinkedErrors({ limit: 20 }),
+            new Sentry.Integrations.ContextLines({ frameContextLines: 7 }),
+            new Sentry.Integrations.LocalVariables({ captureAllExceptions: true }),
+            new Sentry.Integrations.RequestData(),
+        ],
+    })
     app.use(
         "*",
-        sentry({
-            dsn:
-                process.env.SENTRY_DSN ??
-                "https://513dd05fe7a697e50f87747cbd6b3108@o4506722572304384.ingest.us.sentry.io/4506920763129856",
-            environment: process.env.NODE_ENV,
-            enableTracing: true,
-        })
+        async (c, next) => {
+            await next();
+            if (c.error) Sentry.captureException(c.error);
+        }
     );
+}
 app.use(logger());
 app.use("*", registerMetrics);
 app.use(cors())

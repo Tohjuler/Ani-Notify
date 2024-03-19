@@ -1,9 +1,12 @@
 import { getNewEps } from "./consumet";
 import sendNotifications from "./notifications";
 import db from "../lib/db";
-import * as cron from "node-cron";
+import * as cronIns from "node-cron";
+import * as Sentry from "@sentry/bun";
 
 export default function startCron() {
+    const cron = process.env.DISABLE_SENTRY_DSN === "true" ? cronIns : Sentry.cron.instrumentNodeCron(cronIns);
+
     if (
         process.env.CRON &&
         (!process.env.INTELLIGENT_CHECKS ||
@@ -30,7 +33,7 @@ export default function startCron() {
                         }
                     }
                 });
-        });
+        }, { name: "Defaul-Check" });
     else {
         const minDays = parseInt(process.env.INTELLIGENT_MIN_DAYS ?? "5");
         const maxDays = parseInt(process.env.INTELLIGENT_MAX_DAYS ?? "10");
@@ -77,7 +80,8 @@ export default function startCron() {
                             }
                         }
                     });
-            }
+            },
+            { name: "Intelligent-Check"}
         );
 
         // Daily check - 00:00
@@ -102,6 +106,6 @@ export default function startCron() {
                         }
                     }
                 });
-        });
+        }, { name: "Intelligent-Daily-Check"});
     }
 }

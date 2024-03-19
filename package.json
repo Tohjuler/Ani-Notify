@@ -5,10 +5,10 @@
   },
   "dependencies": {
     "@hono/prometheus": "^1.0.0",
-    "@hono/sentry": "^1.0.1",
     "@hono/swagger-ui": "^0.2.1",
     "@hono/zod-openapi": "^0.9.8",
     "@prisma/client": "^5.11.0",
+    "@sentry/bun": "^7.107.0",
     "@types/node-cron": "^3.0.11",
     "axios": "^1.6.7",
     "hono": "^4.1.0",
