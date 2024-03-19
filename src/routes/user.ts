@@ -140,6 +140,9 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z.object({
                         error: z.string(),
+                        animes: z.array(z.string()).nullable().openapi({
+                            description: "Animes that failed to fetch",
+                        }),
                     }),
                 },
             },
@@ -153,10 +156,18 @@ route.openapi(registerRoute, async (c) => {
     const { id, username, discord_webhook, ntfy_url, animes } =
         c.req.valid("json");
 
-    if (animes)
-        await addAnimesIfNotFound(animes).catch((e) =>
+    if (animes) {
+        const failedAnimes: string[] | null = await addAnimesIfNotFound(animes, c.get("sentry").captureException).catch((e) => {
             c.get("sentry").captureException(e)
-        );
+            return null;
+        });
+
+        if (failedAnimes === null)
+            return c.json({ error: "An error occurred" }, 500);
+
+        if (failedAnimes.length > 0)
+            return c.json({ error: "Failed to fetch animes", animes: failedAnimes }, 500);
+    }
 
     const res: { user?: User; error?: any } =
         await db.user
@@ -168,10 +179,10 @@ route.openapi(registerRoute, async (c) => {
                     ntfy_url,
                     ...(animes
                         ? {
-                              animes: {
-                                  connect: animes.map((id: string) => ({ id })),
-                              },
-                          }
+                            animes: {
+                                connect: animes.map((id: string) => ({ id })),
+                            },
+                        }
                         : {}),
                 },
             })
@@ -199,9 +210,9 @@ route.openapi(registerRoute, async (c) => {
     return res.error
         ? res.error
         : c.json({
-              success: true,
-              user: res.user,
-          });
+            success: true,
+            user: res.user,
+        });
 });
 
 // PUT /user/update
