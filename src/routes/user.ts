@@ -220,6 +220,8 @@ route.openapi(registerRoute, async (c) => {
         : c.json({
             success: true,
             user: res.user,
+            failedAnimes: addAnimesRes?.failedAnime,
+            queuedAnimes: addAnimesRes?.queuedAnime,
         });
 });
 
