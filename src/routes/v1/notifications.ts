@@ -301,7 +301,7 @@ const animeRoute = createRoute({
     tags: ["Notifications"],
 });
 
-app.openapi(animeRoute, async (c) => {
+route.openapi(animeRoute, async (c) => {
     const { animeId } = c.req.valid("param");
     const { page } = c.req.valid("query");
     const pageNum = parseInt(page ?? "1") || 1;
