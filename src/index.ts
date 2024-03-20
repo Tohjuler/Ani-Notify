@@ -16,6 +16,7 @@ const { printMetrics, registerMetrics } = prometheus();
 // Middlewares
 if (process.env.DISABLE_SENTRY_DSN !== "true") {
     Sentry.init({
+        release: "ani-notify@" + process.env.npm_package_version,
         dsn:
             process.env.SENTRY_DSN ??
             "https://513dd05fe7a697e50f87747cbd6b3108@o4506722572304384.ingest.us.sentry.io/4506920763129856",
