@@ -4,6 +4,7 @@ import { getNewEps } from "../../util/consumet";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
+import app from "../..";
 
 const route = new OpenAPIHono();
 
@@ -233,6 +234,119 @@ route.openapi(getRoute, async (c) => {
             page: pageNum,
             total: totalEps,
             nextPage: totalEps > pageNum * prPage,
+        },
+    });
+});
+
+const animeRoute = createRoute({
+    method: "get",
+    path: "/anime/{animeId}",
+    request: {
+        params: z.object({
+            animeId: z.string().openapi({
+                param: {
+                    name: "animeId",
+                    in: "path",
+                },
+                type: "string",
+                example: "1",
+            }),
+        }),
+        query: z.object({
+            page: z.string().optional().default("1").openapi({
+                param: {
+                    name: "page",
+                    in: "query",
+                },
+                type: "integer",
+                example: "1",
+            }),
+        }),
+    },
+    responses: {
+        200: {
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        notifications: z.array(
+                            z.object({
+                                title: z.string().nullable(),
+                                number: z.number(),
+                                providers: z.string(),
+                                dub: z.boolean(),
+                                releasedAt: z.string(),
+                            })
+                        ),
+                        pageInfo: z.object({
+                            page: z.number(),
+                            total: z.number(),
+                            nextPage: z.boolean(),
+                        }),
+                    }),
+                },
+            },
+            description: "Ok Response",
+        },
+        404: {
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        error: z.string().default("Anime not found"),
+                    }),
+                },
+            },
+            description: "Not Found",
+        },
+    },
+    tags: ["Notifications"],
+});
+
+app.openapi(animeRoute, async (c) => {
+    const { animeId } = c.req.valid("param");
+    const { page } = c.req.valid("query");
+    const pageNum = parseInt(page ?? "1") || 1;
+    const prPage = 15;
+
+    const anime = await db.anime.findUnique({
+        where: {
+            id: animeId,
+        },
+    });
+
+    if (!anime) return c.json({ error: "Anime not found" }, 404);
+
+    const eps: Episode[] = await db.episode
+        .findMany({
+            where: {
+                animeId: animeId,
+            },
+            orderBy: {
+                releaseAt: "desc",
+            },
+            skip: (pageNum - 1) * prPage,
+            take: prPage,
+        })
+        .then((res) =>
+            res.map((ep) => ({
+                title: ep.title,
+                number: ep.number,
+                providers: ep.providers,
+                dub: ep.dub,
+                releasedAt: ep.releaseAt.toISOString(),
+                anime: null
+            }))
+        )
+        .catch((e) => {
+            Sentry.captureException(e);
+            return [];
+        });
+
+    return c.json({
+        notifications: eps,
+        pageInfo: {
+            page: pageNum,
+            total: anime.totalEps,
+            nextPage: anime.totalEps > pageNum * prPage,
         },
     });
 });

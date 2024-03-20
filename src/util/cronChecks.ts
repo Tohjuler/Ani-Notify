@@ -5,7 +5,10 @@ import * as cronIns from "node-cron";
 import * as Sentry from "@sentry/bun";
 
 export default function startCron() {
-    const cron = process.env.DISABLE_SENTRY_DSN === "true" ? cronIns : Sentry.cron.instrumentNodeCron(cronIns);
+    const cron = process.env.DISABLE_SENTRY_DSN === "true"
+        || process.env.NODE_ENV !== "production"
+        ? cronIns
+        : Sentry.cron.instrumentNodeCron(cronIns);
 
     if (
         process.env.CRON &&
@@ -81,7 +84,7 @@ export default function startCron() {
                         }
                     });
             },
-            { name: "Intelligent-Check"}
+            { name: "Intelligent-Check" }
         );
 
         // Daily check - 00:00
@@ -106,6 +109,17 @@ export default function startCron() {
                         }
                     }
                 });
-        }, { name: "Intelligent-Daily-Check"});
+        }, { name: "Intelligent-Daily-Check" });
     }
+
+    // Daily Clearup - 00:00
+    cron.schedule("0 0 * * *", async () => {
+        const res = await db.anime.deleteMany({
+            where: {
+                status: "FINISHED",
+            },
+        });
+
+        console.log(`Deleted ${res.count} finished anime`);
+    })
 }

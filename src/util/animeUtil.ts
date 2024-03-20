@@ -6,7 +6,8 @@ import * as Sentry from "@sentry/bun";
 
 export async function addAnime(id: string, user?: User) {
     const anime = await fetchAnimeInfo(id);
-    if (!anime) return null;
+    if (!anime) return;
+    if (anime.status === "FINISHED") return;
     if (!anime.totalEps) anime.totalEps = 0;
 
     const animeCreateRes = await db.anime
