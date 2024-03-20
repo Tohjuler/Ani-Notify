@@ -4,6 +4,8 @@ import db from "../lib/db";
 import * as cronIns from "node-cron";
 import * as Sentry from "@sentry/bun";
 
+const timezone = process.env.TIMEZONE ?? "Europe/Copenhagen";
+
 export default function startCron() {
     const cron = process.env.DISABLE_SENTRY_DSN === "true"
         || process.env.NODE_ENV !== "production"
@@ -38,7 +40,7 @@ export default function startCron() {
                         }
                     });
             });
-        }, { name: "Default-Check" });
+        }, { name: "Default-Check", timezone });
     else {
         const minDays = parseInt(process.env.INTELLIGENT_MIN_DAYS ?? "5");
         const maxDays = parseInt(process.env.INTELLIGENT_MAX_DAYS ?? "10");
@@ -88,7 +90,7 @@ export default function startCron() {
                         });
                 });
             },
-            { name: "Intelligent-Check" }
+            { name: "Intelligent-Check", timezone }
         );
 
         // Daily check - 00:00
@@ -115,7 +117,7 @@ export default function startCron() {
                         }
                     });
             });
-        }, { name: "Intelligent-Daily-Check" });
+        }, { name: "Intelligent-Daily-Check", timezone });
     }
 
     // Daily Clearup - 00:00
@@ -129,5 +131,5 @@ export default function startCron() {
 
             console.log(`Deleted ${res.count} finished anime`);
         })
-    }, { name: "Daily-Clearup" })
+    }, { name: "Daily-Clearup", timezone })
 }
