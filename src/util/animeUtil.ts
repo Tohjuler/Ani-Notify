@@ -2,10 +2,12 @@ import { User } from "@prisma/client";
 import db from "../lib/db";
 import { addEps, fetchAnimeInfo } from "./consumet";
 import { EventHint } from "@sentry/bun";
+import * as Sentry from "@sentry/bun";
 
-export async function addAnime(id: string, user?: User): Promise<Error | null> {
+export async function addAnime(id: string, user?: User) {
     const anime = await fetchAnimeInfo(id);
     if (!anime) return null;
+    if (!anime.totalEps) anime.totalEps = 0;
 
     const animeCreateRes = await db.anime
         .create({
@@ -23,33 +25,37 @@ export async function addAnime(id: string, user?: User): Promise<Error | null> {
             },
         })
         .then(() => null)
-        .catch((e) => e);
+        .catch((e) => {
+            Sentry.captureException(e, {
+                data: {
+                    id,
+                },
+            });
+            return e;
+        });
 
-    if (animeCreateRes) return animeCreateRes;
+    if (animeCreateRes) return;
     await addEps(id);
-
-    return animeCreateRes;
 }
 
-export async function addAnimeIfNotFound(ids: string[], captureException: (exception: unknown, hint?: EventHint | undefined) => string): Promise<string[]> {
-    const failedAnime: string[] = [];
+export interface AnimesRes {
+    failedAnime: string[];
+    queuedAnime: string[];
+}
+
+export async function addAnimeIfNotFound(ids: string[], captureException: (exception: unknown, hint?: EventHint | undefined) => string): Promise<AnimesRes> {
+    const animeRes: AnimesRes = {
+        failedAnime: [],
+        queuedAnime: [],
+    };
     for (const id of ids)
         await db.anime
             .findUnique({
                 where: { id },
             })
             .then(async (anime) => {
-                if (!anime) {
-                    const res = await addAnime(id);
-                    if (res) {
-                        captureException(res, {
-                            data: {
-                                id,
-                            },
-                        });
-                        failedAnime.push(id);
-                    }
-                }
+                if (!anime)
+                    animeRes.queuedAnime.push(id);
             })
             .catch((e) => {
                 captureException(e, {
@@ -57,8 +63,8 @@ export async function addAnimeIfNotFound(ids: string[], captureException: (excep
                         id,
                     },
                 });
-                failedAnime.push(id);
+                animeRes.failedAnime.push(id);
             });
 
-    return failedAnime;
+    return animeRes;
 }

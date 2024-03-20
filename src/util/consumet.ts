@@ -145,19 +145,22 @@ export async function addEps(animeId: string) {
     };
 
     for (const provider of supportedProviders) {
-        const epsSub = await axios.get<ConsumetEpisode[]>(
+        // TODO: Add 404 and error handling.
+        const epsSub: ConsumetEpisode[] = await axios.get(
             epsUrl(animeId, false, provider)
-        );
-        const epsDub = await axios.get<ConsumetEpisode[]>(
+        ).then((res) => res.data)
+            .catch(() => []);
+        const epsDub: ConsumetEpisode[] = await axios.get(
             epsUrl(animeId, true, provider)
-        );
+        ).then((res) => res.data)
+            .catch(() => []);
 
         // Add sub episodes
-        epsSub.data.forEach((ep) => {
+        epsSub.forEach((ep) => {
             addEps(ep, false, provider);
         });
         // Add dub episodes
-        epsDub.data.forEach((ep) => {
+        epsDub.forEach((ep) => {
             addEps(ep, true, provider);
         });
     }

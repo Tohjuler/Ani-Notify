@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
 import db from "../lib/db";
-import { addAnimeIfNotFound as addAnimesIfNotFound } from "../util/animeUtil";
+import { AnimesRes, addAnime, addAnimeIfNotFound as addAnimesIfNotFound } from "../util/animeUtil";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
@@ -120,6 +120,12 @@ const registerRoute = createRoute({
                             createdAt: z.string(),
                             updatedAt: z.string(),
                         }),
+                        failedAnimes: z.array(z.string()).nullable().openapi({
+                            description: "Animes that failed to fetch, is it must likely because they don't exist.",
+                        }),
+                        queuedAnimes: z.array(z.string()).nullable().openapi({
+                            description: "Animes that are queued to be fetched, it will be done within 2-3 minutes.",
+                        })
                     }),
                 },
             },
@@ -140,9 +146,6 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z.object({
                         error: z.string(),
-                        animes: z.array(z.string()).nullable().openapi({
-                            description: "Animes that failed to fetch",
-                        }),
                     }),
                 },
             },
@@ -156,17 +159,15 @@ route.openapi(registerRoute, async (c) => {
     const { id, username, discord_webhook, ntfy_url, animes } =
         c.req.valid("json");
 
+    let addAnimesRes: AnimesRes | null = null;
     if (animes) {
-        const failedAnimes: string[] | null = await addAnimesIfNotFound(animes, Sentry.captureException).catch((e) => {
+        addAnimesRes = await addAnimesIfNotFound(animes, Sentry.captureException).catch((e) => {
             Sentry.captureException(e)
             return null;
         });
 
-        if (failedAnimes === null)
+        if (addAnimesRes === null)
             return c.json({ error: "An error occurred" }, 500);
-
-        if (failedAnimes.length > 0)
-            return c.json({ error: "Failed to fetch animes", animes: failedAnimes }, 500);
     }
 
     const res: { user?: User; error?: any } =
@@ -180,15 +181,22 @@ route.openapi(registerRoute, async (c) => {
                     ...(animes
                         ? {
                             animes: {
-                                connect: animes.map((id: string) => ({ id })),
+                                connect: animes.filter((a) => !addAnimesRes?.failedAnime.includes(a)
+                                    && !addAnimesRes?.queuedAnime.includes(a))
+                                    .map((id: string) => ({ id })),
                             },
                         }
                         : {}),
                 },
             })
-            .then((res) => ({
-                user: res
-            }))
+            .then((res) => {
+                if (addAnimesRes)
+                    addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res));
+
+                return {
+                    user: res
+                }
+            })
             .catch((e) => {
                 if (e.code === "P2002")
                     return {
