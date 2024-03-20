@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
-import db from "../lib/db";
-import { AnimesRes, addAnime, addAnimeIfNotFound as addAnimesIfNotFound } from "../util/animeUtil";
+import db from "../../lib/db";
+import { AnimesRes, addAnime, addAnimeIfNotFound as addAnimesIfNotFound } from "../../util/animeUtil";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";

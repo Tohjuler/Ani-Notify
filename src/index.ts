@@ -85,13 +85,22 @@ app.get("/metrics", printMetrics);
 app.get("/", async (c) => {
     return c.render(fs.readFileSync("./src/routes/index.html", "utf-8"));
 });
+const loadApi = (ver: string, alias?: string) => {
+    const routesPath = path.join(__dirname, "routes", ver);
+    for (const file of fs.readdirSync(routesPath).filter((f) => f.endsWith(".ts"))) {
+        app.route(
+            "/api/" + ver + "/" + file.replace(".ts", ""),
+            require(path.join(routesPath, file)).default
+        );
+        if (alias)
+            app.route(
+                "/api/" + (alias === "" ? "" : alias + "/") + file.replace(".ts", ""),
+                require(path.join(routesPath, file)).default
+            );
+    }
+}
 
-const routesPath = path.join(__dirname, "routes");
-for (const file of fs.readdirSync(routesPath).filter((f) => f.endsWith(".ts")))
-    app.route(
-        "/api/" + file.replace(".ts", ""),
-        require(path.join(routesPath, file)).default
-    );
+loadApi("v1", "");
 
 // Docs
 

@@ -1,4 +1,4 @@
-import db from "../lib/db";
+import db from "../../lib/db";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
