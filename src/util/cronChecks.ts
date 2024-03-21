@@ -87,6 +87,7 @@ export default function startCron() {
                                         sendNotifications(anime, ep);
                                 }
                             }
+                            console.log(`Intelligent check, for ${animes.length} animes done.`)
                         });
                 });
             },
@@ -115,7 +116,9 @@ export default function startCron() {
                                     sendNotifications(anime, ep);
                             }
                         }
-                    });
+                        console.log(`Intelligent daily check, for ${animes.length} animes done.`)
+                    })
+                    .catch((e) => Sentry.captureException(e));
             });
         }, { name: "Intelligent-Daily-Check", timezone });
     }

@@ -248,7 +248,8 @@ const currentlyTrackingRoute = createRoute({
                         z.object({
                             id: z.string(),
                             title: z.string().nullable(),
-                            episodes: z.number(),
+                            subEpisodes: z.number(),
+                            dubEpisodes: z.number(),
                             totalEpisodes: z.number(),
                             status: z.string(),
                             createdAt: z.string(),
@@ -279,7 +280,8 @@ route.openapi(currentlyTrackingRoute, async (c) => {
         .then(async (res) => Promise.all(res.map(async (ani) => ({
             id: ani.id,
             title: ani.title,
-            episodes: await db.episode.count({ where: { animeId: ani.id } }),
+            subEpisodes: await db.episode.count({ where: { animeId: ani.id, dub: false } }),
+            dubEpisodes: await db.episode.count({ where: { animeId: ani.id, dub: true } }),
             totalEpisodes: ani.totalEps,
             status: ani.status,
             createdAt: ani.createdAt.toISOString(),
