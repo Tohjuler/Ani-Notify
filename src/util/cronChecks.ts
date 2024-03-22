@@ -3,6 +3,7 @@ import sendNotifications from "./notifications";
 import db from "../lib/db";
 import * as cronIns from "node-cron";
 import * as Sentry from "@sentry/bun";
+import { isWithin } from "./util";
 
 const timezone = process.env.TIMEZONE ?? "Europe/Copenhagen";
 
@@ -38,7 +39,8 @@ export default function startCron() {
                                     sendNotifications(anime, ep);
                             }
                         }
-                    });
+                    })
+                    .catch((e) => Sentry.captureException(e));
             });
         }, { name: "Default-Check", timezone });
     else {
@@ -68,16 +70,7 @@ export default function startCron() {
                                     )[0].releaseAt
                                 );
 
-                                // Check if the last episode was released more than minDays ago and less than maxDays ago
-                                const today = new Date();
-                                const diffTime = Math.abs(
-                                    today.getTime() - lastEpReleaseDate.getTime()
-                                );
-                                const diffDays = Math.ceil(
-                                    diffTime / (1000 * 60 * 60 * 24)
-                                );
-                                if (diffDays < minDays || diffDays > maxDays)
-                                    continue;
+                                if (!isWithin(minDays, maxDays, lastEpReleaseDate)) continue;
 
                                 const newEps = await getNewEps(anime);
 
@@ -88,7 +81,8 @@ export default function startCron() {
                                 }
                             }
                             console.log(`Intelligent check, for ${animes.length} animes done.`)
-                        });
+                        })
+                        .catch((e) => Sentry.captureException(e));
                 });
             },
             { name: "Intelligent-Check", timezone }
@@ -130,9 +124,11 @@ export default function startCron() {
                 where: {
                     status: "FINISHED",
                 },
+            }).catch((e) => {
+                Sentry.captureException(e)
             });
 
-            console.log(`Deleted ${res.count} finished anime`);
+            console.log(`Deleted ${res?.count} finished anime`);
         })
     }, { name: "Daily-Clearup", timezone })
 }

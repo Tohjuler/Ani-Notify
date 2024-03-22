@@ -1,7 +1,8 @@
-import type { Anime, Episode, PrismaClient } from "@prisma/client";
+import type { Anime, Episode } from "@prisma/client";
 import axios from "axios";
 import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 import db from "../lib/db";
+import * as Sentry from "@sentry/bun";
 
 const supportedProviders = ["gogoanime", "zoro"] as const;
 
@@ -40,7 +41,7 @@ export async function getNewEps(
                         ? dbEp.providers
                         : dbEp.providers + "," + provider,
                 },
-            });
+            }).catch((e) => Sentry.captureException(e));
         } else {
             // Add new episode
             await db.episode.create({
@@ -52,7 +53,7 @@ export async function getNewEps(
                     title: ep.title,
                     releaseAt: ep.createdAt ?? new Date(),
                 },
-            });
+            }).catch((e) => Sentry.captureException(e));
         }
 
         if (newEps.find((e) => e.number === ep.number && e.dub === dub)) {
@@ -128,7 +129,7 @@ export async function addEps(animeId: string) {
                         ? dbEp.providers
                         : dbEp.providers + "," + provider,
                 },
-            });
+            }).catch((e) => Sentry.captureException(e));
         } else {
             // Add new episode
             await db.episode.create({
@@ -140,19 +141,19 @@ export async function addEps(animeId: string) {
                     title: ep.title,
                     releaseAt: ep.createdAt ?? new Date(),
                 },
-            });
+            }).catch((e) => Sentry.captureException(e));
         }
     };
 
     for (const provider of supportedProviders) {
         // TODO: Add 404 and error handling.
-        const epsSub: ConsumetEpisode[] = await axios.get(
-            epsUrl(animeId, false, provider)
-        ).then((res) => res.data)
+        const epsSub: ConsumetEpisode[] = await axios
+            .get(epsUrl(animeId, false, provider))
+            .then((res) => res.data)
             .catch(() => []);
-        const epsDub: ConsumetEpisode[] = await axios.get(
-            epsUrl(animeId, true, provider)
-        ).then((res) => res.data)
+        const epsDub: ConsumetEpisode[] = await axios
+            .get(epsUrl(animeId, true, provider))
+            .then((res) => res.data)
             .catch(() => []);
 
         // Add sub episodes
@@ -210,7 +211,7 @@ async function updateStatus(anime: Anime) {
             data: {
                 status: newInfo.status,
             },
-        });
+        }).catch((e) => Sentry.captureException(e));
     if (newInfo.totalEps !== anime.totalEps)
         await db.anime.update({
             where: {
@@ -219,5 +220,5 @@ async function updateStatus(anime: Anime) {
             data: {
                 totalEps: newInfo.totalEps,
             },
-        });
+        }).catch((e) => Sentry.captureException(e));
 }
