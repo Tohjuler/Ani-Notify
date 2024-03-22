@@ -25,7 +25,7 @@ model Anime {
 model Episode {
   id        Int      @id @default(autoincrement())
   title     String?
-  number    Int
+  number    Float
   providers String
   dub       Boolean
   animeId   String?
