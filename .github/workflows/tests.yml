@@ -1,0 +1,22 @@
+name: Bun-Tests
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install -p
+      - run: bun test
