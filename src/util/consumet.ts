@@ -99,10 +99,15 @@ export async function getNewEps(
     }
 
     // Check if the totalAmount of is reached
-    if (anime.totalEps <= anime.episodes.length + newEps.length)
+    if (isFinished(anime, newEps, false) && isFinished(anime, newEps, true)) // Dub and Sub is finished
         updateStatus(anime);
 
     return newEps;
+}
+
+function isFinished(anime: { episodes: Episode[] } & Anime, newEps: EpisodeInfo[], dub: boolean): boolean {
+    return anime.episodes.filter((ep) => ep.dub === dub).length + newEps.filter((ep) => ep.dub === dub).length
+        >= anime.totalEps;
 }
 
 export async function addEps(animeId: string) {
