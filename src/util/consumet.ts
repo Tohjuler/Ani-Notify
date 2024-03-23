@@ -4,7 +4,7 @@ import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 import db from "../lib/db";
 import * as Sentry from "@sentry/bun";
 
-const supportedProviders = ["gogoanime", "zoro"] as const;
+const supportedProviders = ["gogoanime"] as const;
 
 function epsUrl(id: string, dub: boolean, provider: string): string {
     return `${process.env.CONSUMET_URL}/meta/anilist/episodes/${id}?dub=${dub}&provider=${provider}`;
