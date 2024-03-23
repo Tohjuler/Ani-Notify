@@ -1,8 +1,10 @@
-import { User } from "@prisma/client";
+import { Anime, Episode, User } from "@prisma/client";
 import db from "../lib/db";
-import { addEps, fetchAnimeInfo } from "./consumet";
+import { addEps, fetchAnimeInfo, getNewEps } from "./consumet";
 import { EventHint } from "@sentry/bun";
 import * as Sentry from "@sentry/bun";
+import sendNotifications from "./notifications";
+import { isWithin } from "./util";
 
 export async function addAnime(id: string, user?: User) {
     const anime = await fetchAnimeInfo(id);
@@ -16,12 +18,12 @@ export async function addAnime(id: string, user?: User) {
                 ...anime,
                 ...(user
                     ? {
-                        users: {
-                            connect: {
-                                id: user?.id,
-                            },
-                        },
-                    }
+                          users: {
+                              connect: {
+                                  id: user?.id,
+                              },
+                          },
+                      }
                     : {}),
             },
         })
@@ -44,7 +46,13 @@ export interface AnimesRes {
     queuedAnime: string[];
 }
 
-export async function addAnimeIfNotFound(ids: string[], captureException: (exception: unknown, hint?: EventHint | undefined) => string): Promise<AnimesRes> {
+export async function addAnimeIfNotFound(
+    ids: string[],
+    captureException: (
+        exception: unknown,
+        hint?: EventHint | undefined
+    ) => string
+): Promise<AnimesRes> {
     const animeRes: AnimesRes = {
         failedAnime: [],
         queuedAnime: [],
@@ -55,8 +63,7 @@ export async function addAnimeIfNotFound(ids: string[], captureException: (excep
                 where: { id },
             })
             .then(async (anime) => {
-                if (!anime)
-                    animeRes.queuedAnime.push(id);
+                if (!anime) animeRes.queuedAnime.push(id);
             })
             .catch((e) => {
                 captureException(e, {
@@ -68,4 +75,40 @@ export async function addAnimeIfNotFound(ids: string[], captureException: (excep
             });
 
     return animeRes;
+}
+
+export function checkAnime(anime: { episodes: Episode[] } & Anime) {
+    getNewEps(anime).then((newEps) => {
+        // Send notifications
+        if (newEps.length > 0)
+            for (const ep of newEps) sendNotifications(anime, ep);
+    });
+}
+
+export async function performAnimeCheck(minDays?: number, maxDays?: number) {
+    await db.anime
+        .findMany({
+            where: {
+                status: "RELEASING",
+            },
+            include: {
+                episodes: true,
+            },
+        })
+        .then(async (animes) => {
+            for (const anime of animes) {
+                if (minDays && maxDays) {
+                    const lastEpReleaseDate = new Date(
+                        anime.episodes.sort(
+                            (a, b) => b.releaseAt.getTime() - a.releaseAt.getTime()
+                        )[0].releaseAt
+                    );
+    
+                    if (!isWithin(minDays, maxDays, lastEpReleaseDate)) continue;
+                }
+
+                checkAnime(anime);
+            }
+        })
+        .catch((e) => Sentry.captureException(e));
 }

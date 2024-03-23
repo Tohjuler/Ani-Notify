@@ -1,10 +1,8 @@
-import { Anime } from "@prisma/client";
 import db from "../../lib/db";
 import { getNewEps } from "../../util/consumet";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
-import app from "../..";
 
 const route = new OpenAPIHono();
 
