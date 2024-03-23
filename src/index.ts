@@ -8,6 +8,8 @@ import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import * as Sentry from "@sentry/bun";
 import startCron from "./util/cronChecks";
+import { checkAnime, performAnimeCheck } from "./util/animeUtil";
+import db from "./lib/db";
 
 const app = new OpenAPIHono();
 
@@ -32,21 +34,20 @@ if (process.env.DISABLE_SENTRY_DSN !== "true") {
             new Sentry.Integrations.FunctionToString(),
             new Sentry.Integrations.LinkedErrors({ limit: 30 }),
             new Sentry.Integrations.ContextLines(),
-            new Sentry.Integrations.LocalVariables({ captureAllExceptions: true }),
+            new Sentry.Integrations.LocalVariables({
+                captureAllExceptions: true,
+            }),
             new Sentry.Integrations.RequestData(),
         ],
-    })
-    app.use(
-        "*",
-        async (c, next) => {
-            await next();
-            if (c.error) Sentry.captureException(c.error);
-        }
-    );
+    });
+    app.use("*", async (c, next) => {
+        await next();
+        if (c.error) Sentry.captureException(c.error);
+    });
 }
 app.use(logger());
 app.use("*", registerMetrics);
-app.use(cors())
+app.use(cors());
 
 if (process.env.API_KEY)
     app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
@@ -87,18 +88,22 @@ app.get("/", async (c) => {
 });
 const loadApi = (ver: string, alias?: string) => {
     const routesPath = path.join(__dirname, "routes", ver);
-    for (const file of fs.readdirSync(routesPath).filter((f) => f.endsWith(".ts"))) {
+    for (const file of fs
+        .readdirSync(routesPath)
+        .filter((f) => f.endsWith(".ts"))) {
         app.route(
             "/api/" + ver + "/" + file.replace(".ts", ""),
             require(path.join(routesPath, file)).default
         );
         if (alias)
             app.route(
-                "/api/" + (alias === "" ? "" : alias + "/") + file.replace(".ts", ""),
+                "/api/" +
+                    (alias === "" ? "" : alias + "/") +
+                    file.replace(".ts", ""),
                 require(path.join(routesPath, file)).default
             );
     }
-}
+};
 
 loadApi("v1", "");
 
@@ -115,5 +120,21 @@ app.doc("/doc", {
 app.get("/ui", swaggerUI({ url: "/doc" }));
 
 startCron();
+
+db.anime
+    .findMany({
+        where: {
+            id: "154587",
+        },
+        include: {
+            episodes: true,
+        },
+    })
+    .then(async (animes) => {
+        for (const anime of animes) {
+            checkAnime(anime);
+        }
+    })
+    .catch((e) => Sentry.captureException(e));
 
 export default app;

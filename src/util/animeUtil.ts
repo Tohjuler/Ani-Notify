@@ -79,7 +79,6 @@ export async function addAnimeIfNotFound(
 
 export function checkAnime(anime: { episodes: Episode[] } & Anime) {
     getNewEps(anime).then((newEps) => {
-        // Send notifications
         if (newEps.length > 0)
             for (const ep of newEps) sendNotifications(anime, ep);
     });
@@ -96,18 +95,29 @@ export async function performAnimeCheck(minDays?: number, maxDays?: number) {
             },
         })
         .then(async (animes) => {
+            const checksPrMin = 3;
+            const time = 30; // Seconds
+            let i = 0;
             for (const anime of animes) {
                 if (minDays && maxDays) {
                     const lastEpReleaseDate = new Date(
                         anime.episodes.sort(
-                            (a, b) => b.releaseAt.getTime() - a.releaseAt.getTime()
+                            (a, b) =>
+                                b.releaseAt.getTime() - a.releaseAt.getTime()
                         )[0].releaseAt
                     );
-    
-                    if (!isWithin(minDays, maxDays, lastEpReleaseDate)) continue;
+
+                    if (!isWithin(minDays, maxDays, lastEpReleaseDate))
+                        continue;
+                }
+
+                if (i === checksPrMin) {
+                    await new Promise((res) => setTimeout(res, 1000 * time));
+                    i = 0;
                 }
 
                 checkAnime(anime);
+                i++;
             }
         })
         .catch((e) => Sentry.captureException(e));

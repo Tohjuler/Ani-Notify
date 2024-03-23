@@ -10,29 +10,23 @@ function epsUrl(id: string, dub: boolean, provider: string): string {
     return `${process.env.CONSUMET_URL}/meta/anilist/episodes/${id}?dub=${dub}&provider=${provider}`;
 }
 
-export async function getNewEps(
-    anime: { episodes: Episode[] } & Anime
-): Promise<EpisodeInfo[]> {
-    const subEps = anime.episodes.filter((ep) => !ep.dub);
-    const dubEps = anime.episodes.filter((ep) => ep.dub);
-
-    const newEps: EpisodeInfo[] = [];
-
-    const addEps = async (
-        ep: ConsumetEpisode,
-        dub: boolean,
-        provider: string
-    ) => {
-        const dbEp = await db.episode.findFirst({
-            where: {
-                animeId: anime.id,
-                number: ep.number,
-                dub: dub,
-            },
-        });
-        if (dbEp !== null) {
-            // Update provider
-            await db.episode.update({
+async function addEp(
+    anime: Anime,
+    ep: ConsumetEpisode,
+    dub: boolean,
+    provider: string
+): Promise<EpisodeInfo> {
+    const dbEp = await db.episode.findFirst({
+        where: {
+            animeId: anime.id,
+            number: ep.number,
+            dub: dub,
+        },
+    });
+    if (dbEp !== null) {
+        // Update provider
+        await db.episode
+            .update({
                 where: {
                     id: dbEp.id,
                 },
@@ -41,10 +35,12 @@ export async function getNewEps(
                         ? dbEp.providers
                         : dbEp.providers + "," + provider,
                 },
-            }).catch((e) => Sentry.captureException(e));
-        } else {
-            // Add new episode
-            await db.episode.create({
+            })
+            .catch((e) => Sentry.captureException(e));
+    } else {
+        // Add new episode
+        await db.episode
+            .create({
                 data: {
                     animeId: anime.id,
                     number: ep.number,
@@ -53,61 +49,83 @@ export async function getNewEps(
                     title: ep.title,
                     releaseAt: ep.createdAt ?? new Date(),
                 },
-            }).catch((e) => Sentry.captureException(e));
-        }
+            })
+            .catch((e) => Sentry.captureException(e));
+    }
 
-        if (newEps.find((e) => e.number === ep.number && e.dub === dub)) {
-            // Update provider
-            const index = newEps.findIndex(
-                (e) => e.number === ep.number && e.dub === dub
-            );
-            newEps[index].providers = newEps[index].providers
-                .split(",")
-                .includes(provider)
-                ? newEps[index].providers
-                : newEps[index].providers + "," + provider;
-            return;
-        }
-        newEps.push({
-            ...ep,
-            dub: dub,
-            animeId: anime.id,
-            providers: provider,
-        });
+    return {
+        ...ep,
+        dub,
+        providers: provider,
+        animeId: anime.id,
     };
+}
+export async function getNewEps(
+    anime: { episodes: Episode[] } & Anime
+): Promise<EpisodeInfo[]> {
+    const subEps = anime.episodes.filter((ep) => !ep.dub);
+    const dubEps = anime.episodes.filter((ep) => ep.dub);
+
+    const newEps: EpisodeInfo[] = [];
 
     for (const provider of supportedProviders) {
-        const epsSub = await axios.get<ConsumetEpisode[]>(
-            epsUrl(anime.id, false, provider)
-        );
-        const epsDub = await axios.get<ConsumetEpisode[]>(
-            epsUrl(anime.id, true, provider)
-        );
+        const epsSub: ConsumetEpisode[] = await axios
+            .get<ConsumetEpisode[]>(epsUrl(anime.id, false, provider))
+            .then((res) => res.data)
+            .catch(() => {
+                console.log(`Failed to fetch sub episodes for ${anime.id}`);
+                return [];
+            });
+        const epsDub: ConsumetEpisode[] = await axios
+            .get<ConsumetEpisode[]>(epsUrl(anime.id, true, provider))
+            .then((res) => res.data)
+            .catch(() => {
+                console.log(`Failed to fetch dub episodes for ${anime.id}`);
+                return [];
+            });
 
         // Add new sub episodes
-        epsSub.data
-            .filter((ep) => !subEps.find((e) => e.number === ep.number))
-            .forEach((ep) => {
-                addEps(ep, false, provider);
-            });
+        for (const ep of epsSub.filter(
+            (ep) => !subEps.find((e) => e.number === ep.number)
+        )) {
+            newEps.push(await addEp(anime, ep, false, provider));
+        }
         // Add new dub episodes
-        epsDub.data
-            .filter((ep) => !dubEps.find((e) => e.number === ep.number))
-            .forEach((ep) => {
-                addEps(ep, true, provider);
-            });
+        for (const ep of epsDub.filter(
+            (ep) => !dubEps.find((e) => e.number === ep.number)
+        )) {
+            newEps.push(await addEp(anime, ep, true, provider));
+        }
+    }
+
+    // Find duplicates and combine them by adding the providers
+    const combinedEps: EpisodeInfo[] = [];
+    for (const ep of newEps) {
+        const existingEp = combinedEps.find(
+            (e) => e.number === ep.number && e.dub === ep.dub
+        );
+        if (existingEp) existingEp.providers += `,${ep.providers}`;
+        else combinedEps.push(ep);
     }
 
     // Check if the totalAmount of is reached
-    if (isFinished(anime, newEps, false) && isFinished(anime, newEps, true)) // Dub and Sub is finished
+    if (isFinished(anime, newEps, false) && isFinished(anime, newEps, true))
+        // Dub and Sub is finished
         updateStatus(anime);
 
-    return newEps;
+    return combinedEps;
 }
 
-function isFinished(anime: { episodes: Episode[] } & Anime, newEps: EpisodeInfo[], dub: boolean): boolean {
-    return anime.episodes.filter((ep) => ep.dub === dub).length + newEps.filter((ep) => ep.dub === dub).length
-        >= anime.totalEps;
+function isFinished(
+    anime: { episodes: Episode[] } & Anime,
+    newEps: EpisodeInfo[],
+    dub: boolean
+): boolean {
+    return (
+        anime.episodes.filter((ep) => ep.dub === dub).length +
+            newEps.filter((ep) => ep.dub === dub).length >=
+        anime.totalEps
+    );
 }
 
 export async function addEps(animeId: string) {
@@ -125,28 +143,32 @@ export async function addEps(animeId: string) {
         });
         if (dbEp !== null) {
             // Update provider
-            await db.episode.update({
-                where: {
-                    id: dbEp.id,
-                },
-                data: {
-                    providers: dbEp.providers.split(",").includes(provider)
-                        ? dbEp.providers
-                        : dbEp.providers + "," + provider,
-                },
-            }).catch((e) => Sentry.captureException(e));
+            await db.episode
+                .update({
+                    where: {
+                        id: dbEp.id,
+                    },
+                    data: {
+                        providers: dbEp.providers.split(",").includes(provider)
+                            ? dbEp.providers
+                            : dbEp.providers + "," + provider,
+                    },
+                })
+                .catch((e) => Sentry.captureException(e));
         } else {
             // Add new episode
-            await db.episode.create({
-                data: {
-                    animeId: animeId,
-                    number: ep.number,
-                    dub: dub,
-                    providers: provider,
-                    title: ep.title,
-                    releaseAt: ep.createdAt ?? new Date(),
-                },
-            }).catch((e) => Sentry.captureException(e));
+            await db.episode
+                .create({
+                    data: {
+                        animeId: animeId,
+                        number: ep.number,
+                        dub: dub,
+                        providers: provider,
+                        title: ep.title,
+                        releaseAt: ep.createdAt ?? new Date(),
+                    },
+                })
+                .catch((e) => Sentry.captureException(e));
         }
     };
 
@@ -208,22 +230,34 @@ async function updateStatus(anime: Anime) {
         return;
     }
 
-    if (newInfo.status !== anime.status)
-        await db.anime.update({
-            where: {
-                id: anime.id,
-            },
-            data: {
-                status: newInfo.status,
-            },
-        }).catch((e) => Sentry.captureException(e));
-    if (newInfo.totalEps !== anime.totalEps)
-        await db.anime.update({
-            where: {
-                id: anime.id,
-            },
-            data: {
-                totalEps: newInfo.totalEps,
-            },
-        }).catch((e) => Sentry.captureException(e));
+    if (newInfo.status !== anime.status) {
+        await db.anime
+            .update({
+                where: {
+                    id: anime.id,
+                },
+                data: {
+                    status: newInfo.status,
+                },
+            })
+            .catch((e) => Sentry.captureException(e));
+        console.log(
+            `Updated status for ${anime.id} | ${anime.status} > ${newInfo.status}`
+        );
+    }
+    if (newInfo.totalEps !== anime.totalEps) {
+        await db.anime
+            .update({
+                where: {
+                    id: anime.id,
+                },
+                data: {
+                    totalEps: newInfo.totalEps,
+                },
+            })
+            .catch((e) => Sentry.captureException(e));
+        console.log(
+            `Updated total episodes for ${anime.id} | ${anime.totalEps} > ${newInfo.totalEps}`
+        );
+    }
 }
