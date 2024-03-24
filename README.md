@@ -12,6 +12,7 @@
 * [🧬Tech Tack](#tech-stack)
 * [🔥Endpoints](#endpoints)
 * [🔨Setup](#setup)
+* [🎯Roadmap](#roadmap)
 * [📝Contribution](#contribution)
 
 ## ⚡General Information
@@ -61,6 +62,18 @@ See [docker-compose.yml](https://github.com/Tohjuler/Ani-Notify/blob/master/dock
 Access the api at ``http://localhost:3000``
 <br>
 and the Swagger UI at ``http://localhost:3000/ui``
+
+## 🎯Roadmap
+The list is sorted by comming next.
+- 🟡AniList integration.
+- 🔴Frontend rework.
+- 🔴User settings.
+  - 🔴Only sub/dub
+  - 🔴More notify options.
+    - 🔴Custom webhook.
+    - 🔴Slack.
+    - 🔴More... (Ideas are welcomed)
+  - 🔴Customize messages.
 
 ## 📝Contribution
 Contributions are always welcome!
