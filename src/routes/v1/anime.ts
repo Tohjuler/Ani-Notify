@@ -2,6 +2,7 @@ import db from "../../lib/db";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
+import { addAnimeToUser } from "../../util/animeUtil";
 
 const route = new OpenAPIHono();
 
@@ -50,11 +51,6 @@ const subscribeRoute = createRoute({
                                 error: "User not found",
                             },
                         },
-                        "Anime not found": {
-                            value: {
-                                error: "Anime not found",
-                            },
-                        },
                     },
                 },
             },
@@ -89,36 +85,13 @@ route.openapi(subscribeRoute, async (c) => {
 
     if (!user) return c.json({ error: "User not found" }, 404);
 
-    const anime = await db.anime
-        .findUnique({
-            where: { id: animeId },
-        })
-        .then((res) => res)
-        .catch((e) => {
-            Sentry.captureException(e);
-            return null;
-        });
-
-    if (!anime) return c.json({ error: "Anime not found" }, 404);
-
-    const res = await db.user
-        .update({
-            where: { id, username },
-            data: {
-                animes: {
-                    connect: {
-                        id: animeId,
-                    },
-                },
-            },
-        })
+    const res: Error | null = await addAnimeToUser(animeId, user)
         .then(() => null)
-        .catch((e) => {
-            Sentry.captureException(e);
-            return c.json({ error: "An error occurred" }, 500);
-        });
+        .catch((e) => e);
 
-    return res ? res : c.json({ success: true });
+    return res
+        ? c.json({ error: res.message }, { status: 500 })
+        : c.json({ success: true });
 });
 
 // post /anime/unsubscribe
@@ -277,22 +250,32 @@ const currentlyTrackingRoute = createRoute({
 route.openapi(currentlyTrackingRoute, async (c) => {
     const animes = await db.anime
         .findMany()
-        .then(async (res) => Promise.all(res.map(async (ani) => ({
-            id: ani.id,
-            title: ani.title,
-            subEpisodes: await db.episode.count({ where: { animeId: ani.id, dub: false } }),
-            dubEpisodes: await db.episode.count({ where: { animeId: ani.id, dub: true } }),
-            totalEpisodes: ani.totalEps,
-            status: ani.status,
-            createdAt: ani.createdAt.toISOString(),
-            updatedAt: ani.updatedAt.toISOString(),
-        }))))
+        .then(async (res) =>
+            Promise.all(
+                res.map(async (ani) => ({
+                    id: ani.id,
+                    title: ani.title,
+                    subEpisodes: await db.episode.count({
+                        where: { animeId: ani.id, dub: false },
+                    }),
+                    dubEpisodes: await db.episode.count({
+                        where: { animeId: ani.id, dub: true },
+                    }),
+                    totalEpisodes: ani.totalEps,
+                    status: ani.status,
+                    createdAt: ani.createdAt.toISOString(),
+                    updatedAt: ani.updatedAt.toISOString(),
+                }))
+            )
+        )
         .catch((e) => {
             Sentry.captureException(e);
             return null;
         });
 
-    return animes ? c.json(animes) : c.json({ error: "An error occurred" }, 500);
+    return animes
+        ? c.json(animes)
+        : c.json({ error: "An error occurred" }, 500);
 });
 
 export default route;

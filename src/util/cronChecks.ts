@@ -2,6 +2,7 @@ import db from "../lib/db";
 import * as cronIns from "node-cron";
 import * as Sentry from "@sentry/bun";
 import { performAnimeCheck } from "./animeUtil";
+import { performUserUpdate } from "./aniListUtil";
 
 const timezone = process.env.TIMEZONE ?? "Europe/Copenhagen";
 
@@ -71,5 +72,16 @@ export default function startCron() {
             });
         },
         { name: "Daily-Clearup", timezone }
+    );
+
+    // Anilist Update - 00:00
+    cron.schedule(
+        process.env.ANILIST_UPDATE_CRON ?? "0 0 * * *",
+        async () => {
+            Sentry.withMonitor("Anilist-Update", async () => {
+                await performUserUpdate();
+            });
+        },
+        { name: "Anilist-Update", timezone }
     );
 }

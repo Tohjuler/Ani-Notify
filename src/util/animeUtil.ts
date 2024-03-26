@@ -8,8 +8,8 @@ import { isWithin } from "./util";
 
 export async function addAnime(id: string, user?: User) {
     const anime = await fetchAnimeInfo(id);
-    if (!anime) return;
-    if (anime.status === "FINISHED") return;
+    if (!anime) throw new Error("Anime not found");
+    if (anime.status === "FINISHED") throw new Error("Anime is finished");
     if (!anime.totalEps) anime.totalEps = 0;
 
     const animeCreateRes = await db.anime
@@ -37,7 +37,7 @@ export async function addAnime(id: string, user?: User) {
             return e;
         });
 
-    if (animeCreateRes) return;
+    if (animeCreateRes) throw animeCreateRes;
     await addEps(id);
 }
 
@@ -46,13 +46,7 @@ export interface AnimesRes {
     queuedAnime: string[];
 }
 
-export async function addAnimeIfNotFound(
-    ids: string[],
-    captureException: (
-        exception: unknown,
-        hint?: EventHint | undefined
-    ) => string
-): Promise<AnimesRes> {
+export async function addAnimesIfNotFound(ids: string[]): Promise<AnimesRes> {
     const animeRes: AnimesRes = {
         failedAnime: [],
         queuedAnime: [],
@@ -66,7 +60,7 @@ export async function addAnimeIfNotFound(
                 if (!anime) animeRes.queuedAnime.push(id);
             })
             .catch((e) => {
-                captureException(e, {
+                Sentry.captureException(e, {
                     data: {
                         id,
                     },
@@ -75,6 +69,32 @@ export async function addAnimeIfNotFound(
             });
 
     return animeRes;
+}
+
+export async function addAnimeToUser(id: string, user: User) {
+    const anime = await db.anime.findUnique({
+        where: { id },
+    });
+
+    if (!anime) {
+        const res = await addAnime(id, user)
+            .then(() => null)
+            .catch((e) => e);
+        if (res) throw res;
+    }
+
+    await db.user
+        .update({
+            where: { id: user.id },
+            data: {
+                animes: {
+                    connect: {
+                        id,
+                    },
+                },
+            },
+        })
+        .catch((e) => Sentry.captureException(e));
 }
 
 export function checkAnime(anime: { episodes: Episode[] } & Anime) {

@@ -1,9 +1,14 @@
 import { User } from "@prisma/client";
 import db from "../../lib/db";
-import { AnimesRes, addAnime, addAnimeIfNotFound as addAnimesIfNotFound } from "../../util/animeUtil";
+import {
+    AnimesRes,
+    addAnime,
+    addAnimesIfNotFound as addAnimesIfNotFound,
+} from "../../util/animeUtil";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
+import { getUserId, updateUser } from "../../util/aniListUtil";
 
 const route = new OpenAPIHono();
 
@@ -87,17 +92,12 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z
                         .object({
-                            id: z.string().nullable().default(null),
+                            id: z.string().nullable(),
                             username: z.string(),
-                            discord_webhook: z
-                                .string()
-                                .nullable()
-                                .default(null),
-                            ntfy_url: z.string().nullable().default(null),
-                            animes: z
-                                .array(z.string())
-                                .nullable()
-                                .default(null),
+                            discord_webhook: z.string().nullable(),
+                            ntfy_url: z.string().nullable(),
+                            animes: z.array(z.string()).nullable(),
+                            anilist: z.string().nullable(),
                         })
                         .openapi({
                             required: ["username"],
@@ -117,15 +117,18 @@ const registerRoute = createRoute({
                             username: z.string(),
                             discord_webhook: z.string().nullable(),
                             ntfy_url: z.string().nullable(),
+                            anilist_id: z.string().nullable(),
                             createdAt: z.string(),
                             updatedAt: z.string(),
                         }),
                         failedAnimes: z.array(z.string()).nullable().openapi({
-                            description: "Animes that failed to fetch, is it must likely because they don't exist.",
+                            description:
+                                "Animes that failed to fetch, is it must likely because they don't exist.",
                         }),
                         queuedAnimes: z.array(z.string()).nullable().openapi({
-                            description: "Animes that are queued to be fetched, it will be done within 2-3 minutes.",
-                        })
+                            description:
+                                "Animes that are queued to be fetched, it will be done within 2-3 minutes.",
+                        }),
                     }),
                 },
             },
@@ -156,13 +159,13 @@ const registerRoute = createRoute({
 });
 
 route.openapi(registerRoute, async (c) => {
-    const { id, username, discord_webhook, ntfy_url, animes } =
+    const { id, username, discord_webhook, ntfy_url, animes, anilist } =
         c.req.valid("json");
 
     let addAnimesRes: AnimesRes | null = null;
     if (animes) {
-        addAnimesRes = await addAnimesIfNotFound(animes, Sentry.captureException).catch((e) => {
-            Sentry.captureException(e)
+        addAnimesRes = await addAnimesIfNotFound(animes).catch((e) => {
+            Sentry.captureException(e);
             return null;
         });
 
@@ -170,59 +173,71 @@ route.openapi(registerRoute, async (c) => {
             return c.json({ error: "An error occurred" }, 500);
     }
 
-    const res: { user?: User; error?: any } =
-        await db.user
-            .create({
-                data: {
-                    ...(id ? { id } : {}),
-                    username,
-                    discord_webhook,
-                    ntfy_url,
-                    ...(animes
-                        ? {
-                            animes: {
-                                connect: animes.filter((a) => !addAnimesRes?.failedAnime.includes(a)
-                                    && !addAnimesRes?.queuedAnime.includes(a))
-                                    .map((id: string) => ({ id })),
-                            },
-                        }
-                        : {}),
-                },
-            })
-            .then((res) => {
-                if (addAnimesRes)
-                    addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res));
+    const aniListId: string | null = anilist ? await getUserId(anilist) : null;
 
+    const res: { user?: User; error?: any } = await db.user
+        .create({
+            data: {
+                ...(id ? { id } : {}),
+                username,
+                discord_webhook,
+                ntfy_url,
+                ...(aniListId ? { aniListId } : {}),
+                ...(animes
+                    ? {
+                          animes: {
+                              connect: animes
+                                  .filter(
+                                      (a) =>
+                                          !addAnimesRes?.failedAnime.includes(
+                                              a
+                                          ) &&
+                                          !addAnimesRes?.queuedAnime.includes(a)
+                                  )
+                                  .map((id: string) => ({ id })),
+                          },
+                      }
+                    : {}),
+            },
+        })
+        .then((res) => {
+            if (addAnimesRes)
+                addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res));
+
+            return {
+                user: res,
+            };
+        })
+        .catch((e) => {
+            if (e.code === "P2002")
                 return {
-                    user: res
-                }
-            })
-            .catch((e) => {
-                if (e.code === "P2002")
-                    return {
-                        error: c.json({ error: "Username already taken" }, 400),
-                    };
-                Sentry.setContext("user", {
-                    id,
-                    username,
-                    discord_webhook,
-                    ntfy_url,
-                    animes,
-                });
-                Sentry.captureException(e);
-                return {
-                    error: c.json({ error: "An error occurred" }, 500),
+                    error: c.json({ error: "Username already taken" }, 400),
                 };
+            Sentry.setContext("user", {
+                id,
+                username,
+                discord_webhook,
+                ntfy_url,
+                animes,
+                aniListId,
             });
+            Sentry.captureException(e);
+            return {
+                error: c.json({ error: "An error occurred" }, 500),
+            };
+        });
+
+    if (res.user && aniListId)
+        updateUser(res.user, animes || []).catch((e) => Sentry.captureException(e));
 
     return res.error
         ? res.error
         : c.json({
-            success: true,
-            user: res.user,
-            failedAnimes: addAnimesRes?.failedAnime,
-            queuedAnimes: addAnimesRes?.queuedAnime,
-        });
+              success: true,
+              user: res.user,
+              failedAnimes: addAnimesRes?.failedAnime,
+              queuedAnimes: addAnimesRes?.queuedAnime,
+          });
 });
 
 // PUT /user/update
@@ -240,6 +255,7 @@ const UpdateRoute = createRoute({
                             username: z.string(),
                             discord_webhook: z.string().nullable(),
                             ntfy_url: z.string().nullable(),
+                            anilist: z.string().nullable(),
                         })
                         .openapi({
                             required: ["id", "username"],
@@ -284,10 +300,12 @@ const UpdateRoute = createRoute({
 });
 
 route.openapi(UpdateRoute, async (c) => {
-    const { id, username, discord_webhook, ntfy_url } = c.req.valid("json");
+    const { id, username, discord_webhook, ntfy_url, anilist } = c.req.valid("json");
 
     if (process.env.ALLOW_EDIT !== "true")
         return c.json({ error: "Editing is disabled" }, 403);
+
+    const aniListId = anilist ? await getUserId(anilist) : null;
 
     const res = await db.user
         .update({
@@ -295,6 +313,7 @@ route.openapi(UpdateRoute, async (c) => {
             data: {
                 discord_webhook,
                 ntfy_url,
+                ...(aniListId ? { aniListId } : {})
             },
         })
         .then(() => null)
