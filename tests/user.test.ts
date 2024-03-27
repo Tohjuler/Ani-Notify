@@ -18,6 +18,7 @@ describe("User", () => {
                 },
             })
         );
+        if (res.status !== 200) console.log(JSON.stringify(await res.json(), null, 2));
         expect(res.status).toBe(200);
         const data = await res.json();
         expect(data.user).toHaveProperty("id");
