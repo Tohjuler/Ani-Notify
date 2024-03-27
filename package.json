@@ -2,7 +2,8 @@
   "version": "1.6.4",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "start": "prisma generate && prisma migrate deploy && bun run src/index.ts"
+    "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",
+    "db:init": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@hono/prometheus": "^1.0.0",
