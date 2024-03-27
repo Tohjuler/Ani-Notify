@@ -92,12 +92,12 @@ const registerRoute = createRoute({
                 "application/json": {
                     schema: z
                         .object({
-                            id: z.string().nullable(),
+                            id: z.string().optional(),
                             username: z.string(),
-                            discord_webhook: z.string().nullable(),
-                            ntfy_url: z.string().nullable(),
-                            animes: z.array(z.string()).nullable(),
-                            anilist: z.string().nullable(),
+                            discord_webhook: z.string().optional(),
+                            ntfy_url: z.string().optional(),
+                            animes: z.array(z.string()).optional(),
+                            anilist: z.string().optional(),
                         })
                         .openapi({
                             required: ["username"],
@@ -115,17 +115,17 @@ const registerRoute = createRoute({
                         user: z.object({
                             id: z.string(),
                             username: z.string(),
-                            discord_webhook: z.string().nullable(),
-                            ntfy_url: z.string().nullable(),
-                            anilist_id: z.string().nullable(),
+                            discord_webhook: z.string().optional(),
+                            ntfy_url: z.string().optional(),
+                            anilist_id: z.string().optional(),
                             createdAt: z.string(),
                             updatedAt: z.string(),
                         }),
-                        failedAnimes: z.array(z.string()).nullable().openapi({
+                        failedAnimes: z.array(z.string()).optional().openapi({
                             description:
                                 "Animes that failed to fetch, is it must likely because they don't exist.",
                         }),
-                        queuedAnimes: z.array(z.string()).nullable().openapi({
+                        queuedAnimes: z.array(z.string()).optional().openapi({
                             description:
                                 "Animes that are queued to be fetched, it will be done within 2-3 minutes.",
                         }),
@@ -253,9 +253,9 @@ const UpdateRoute = createRoute({
                         .object({
                             id: z.string(),
                             username: z.string(),
-                            discord_webhook: z.string().nullable(),
-                            ntfy_url: z.string().nullable(),
-                            anilist: z.string().nullable(),
+                            discord_webhook: z.string().optional(),
+                            ntfy_url: z.string().optional(),
+                            anilist: z.string().optional(),
                         })
                         .openapi({
                             required: ["id", "username"],
