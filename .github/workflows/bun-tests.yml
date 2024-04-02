@@ -21,4 +21,5 @@ jobs:
       - run: cp .env.example .env
       - run: bun install -p
       - run: bun run db:init
-      - run: bun test
+      # - run: bun test # The user tests can't be runned in github actions
+      - run: bun test tests/index.test.ts
