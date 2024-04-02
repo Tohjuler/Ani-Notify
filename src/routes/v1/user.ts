@@ -170,7 +170,7 @@ route.openapi(registerRoute, async (c) => {
         });
 
         if (addAnimesRes === null)
-            return c.json({ error: "An error occurred" }, 500);
+            return c.json({ error: "An error occurred, while processing animes" }, 500);
     }
 
     const aniListId: string | null = anilist ? await getUserId(anilist) : null;
