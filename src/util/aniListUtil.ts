@@ -1,34 +1,37 @@
 import axios from "axios";
 import db from "../lib/db";
 import { captureException } from "@sentry/bun";
-import { Anime, User } from "@prisma/client";
-import { addAnimeToUser, addAnimesIfNotFound } from "./animeUtil";
+import { User } from "@prisma/client";
+import { addAnimeToUser } from "./animeUtil";
 
 export async function getUserId(username: string): Promise<string | null> {
     if (!isNaN(parseInt(username))) return username;
 
-    return await axios
-        .post(
-            "https://graphql.anilist.co",
-            {
-                query: `
-                query ($username: String) {
-                    User(name: $username) {
-                        id
-                    }
-                }`,
-                variables: {
-                    username,
-                },
+    return await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            query: `
+            query ($username: String) {
+                User(name: $username) {
+                    id
+                }
+            }`,
+            variables: {
+                username: username,
             },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        )
-        .then((res) => res.data.data.User.id + "")
-        .catch(() => null);
+        }),
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            return data.data.User.id + "";
+        })
+        .catch((e) => {
+            console.error(e);
+            return null;
+        });
 }
 
 export async function getList(
