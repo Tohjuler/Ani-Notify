@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",
-    "db:init": "prisma generate && prisma migrate deploy"
+    "db:init": "prisma generate && prisma migrate deploy",
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\""
   },
   "dependencies": {
     "@hono/prometheus": "^1.0.0",
