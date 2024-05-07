@@ -10,7 +10,7 @@
     "@hono/prometheus": "^1.0.0",
     "@hono/swagger-ui": "^0.2.1",
     "@hono/zod-openapi": "^0.11.0",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "^5.13.0",
     "@sentry/bun": "^7.113.0",
     "@types/node-cron": "^3.0.11",
     "axios": "^1.6.8",
