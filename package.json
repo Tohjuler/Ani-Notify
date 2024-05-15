@@ -18,7 +18,7 @@
     "node-cron": "^3.0.3",
     "prisma": "^5.14.0",
     "prom-client": "^15.1.2",
-    "zod": "^3.23.6"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bun": "latest"
