@@ -25,19 +25,19 @@ if (process.env.DISABLE_SENTRY_DSN !== "true") {
     environment: process.env.NODE_ENV,
     enableTracing: true,
     integrations: [
-      new Sentry.Integrations.Http({ tracing: true }),
-      new Sentry.Integrations.OnUncaughtException(),
-      new Sentry.Integrations.OnUnhandledRejection(),
-      new Sentry.Integrations.Console(),
-      new Sentry.Integrations.Prisma(),
-      new Sentry.Integrations.InboundFilters(),
-      new Sentry.Integrations.FunctionToString(),
-      new Sentry.Integrations.LinkedErrors({ limit: 30 }),
-      new Sentry.Integrations.ContextLines(),
-      new Sentry.Integrations.LocalVariables({
+      Sentry.httpIntegration(),
+      Sentry.onUncaughtExceptionIntegration(),
+      Sentry.onUnhandledRejectionIntegration(),
+      Sentry.consoleIntegration(),
+      Sentry.prismaIntegration(),
+      Sentry.inboundFiltersIntegration(),
+      Sentry.functionToStringIntegration(),
+      Sentry.linkedErrorsIntegration({ limit: 30 }),
+      Sentry.contextLinesIntegration(),
+      Sentry.localVariablesIntegration({
         captureAllExceptions: true,
       }),
-      new Sentry.Integrations.RequestData(),
+      Sentry.requestDataIntegration,
     ],
   });
   app.use("*", async (c, next) => {
