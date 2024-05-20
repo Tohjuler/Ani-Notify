@@ -13,7 +13,7 @@
     "@prisma/client": "^5.13.0",
     "@sentry/bun": "^8.0.0",
     "@types/node-cron": "^3.0.11",
-    "axios": "^1.6.8",
+    "axios": "^1.7.1",
     "hono": "^4.3.6",
     "node-cron": "^3.0.3",
     "prisma": "^5.14.0",
