@@ -78,7 +78,7 @@ route.openapi(getRoute, async (c) => {
     .then((res) => res)
     .catch(() => null);
 
-  return user ? c.json(user) : c.json({ error: "User not found" }, 404);
+  return user ? c.json(user, 200) : c.json({ error: "User not found" }, 404);
 });
 
 // POST /user/register
@@ -324,7 +324,7 @@ route.openapi(UpdateRoute, async (c) => {
       return c.json({ error: "An error occurred" }, 500);
     });
 
-  return res ? res : c.json({ success: true });
+  return res ? res : c.json({ success: true }, 200);
 });
 
 // DELETE /user/delete
@@ -399,7 +399,7 @@ route.openapi(deleteRoute, async (c) => {
       return c.json({ error: "An error occurred" }, 500);
     });
 
-  return res ? res : c.json({ success: true });
+  return res ? res : c.json({ success: true }, 200);
 });
 
 export default route;

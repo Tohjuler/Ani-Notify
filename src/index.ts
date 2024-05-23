@@ -8,8 +8,7 @@ import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import * as Sentry from "@sentry/bun";
 import startCron from "./util/cronChecks";
-import { checkAnime, performAnimeCheck } from "./util/animeUtil";
-import db from "./lib/db";
+import { performUserUpdate } from "./util/aniListUtil";
 
 const app = new OpenAPIHono();
 
@@ -119,20 +118,6 @@ app.get("/ui", swaggerUI({ url: "/doc" }));
 
 startCron();
 
-db.anime
-  .findMany({
-    where: {
-      id: "154587",
-    },
-    include: {
-      episodes: true,
-    },
-  })
-  .then(async (animes) => {
-    for (const anime of animes) {
-      checkAnime(anime);
-    }
-  })
-  .catch((e) => Sentry.captureException(e));
+performUserUpdate();
 
 export default app;

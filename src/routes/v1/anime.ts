@@ -90,8 +90,8 @@ route.openapi(subscribeRoute, async (c) => {
     .catch((e) => e);
 
   return res
-    ? c.json({ error: res.message }, { status: 500 })
-    : c.json({ success: true });
+    ? c.json({ error: res.message }, 500)
+    : c.json({ success: true }, 200);
 });
 
 // post /anime/unsubscribe
@@ -207,7 +207,7 @@ route.openapi(unsubscribeRoute, async (c) => {
       return c.json({ error: "An error occurred" }, 500);
     });
 
-  return res ? res : c.json({ success: true });
+  return res ? res : c.json({ success: true }, 200);
 });
 
 const currentlyTrackingRoute = createRoute({
@@ -273,7 +273,9 @@ route.openapi(currentlyTrackingRoute, async (c) => {
       return null;
     });
 
-  return animes ? c.json(animes) : c.json({ error: "An error occurred" }, 500);
+  return animes
+    ? c.json(animes, 200)
+    : c.json({ error: "An error occurred" }, 500);
 });
 
 export default route;

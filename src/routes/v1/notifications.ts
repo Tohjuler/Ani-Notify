@@ -222,14 +222,17 @@ route.openapi(getRoute, async (c) => {
       },
     },
   });
-  return c.json({
-    notifications: eps,
-    pageInfo: {
-      page: pageNum,
-      total: totalEps,
-      nextPage: totalEps > pageNum * prPage,
+  return c.json(
+    {
+      notifications: eps,
+      pageInfo: {
+        page: pageNum,
+        total: totalEps,
+        nextPage: totalEps > pageNum * prPage,
+      },
     },
-  });
+    200,
+  );
 });
 
 const animeRoute = createRoute({
@@ -339,14 +342,17 @@ route.openapi(animeRoute, async (c) => {
       return [];
     });
 
-  return c.json({
-    notifications: eps,
-    pageInfo: {
-      page: pageNum,
-      total: anime.totalEps,
-      nextPage: anime.totalEps > pageNum * prPage,
+  return c.json(
+    {
+      notifications: eps,
+      pageInfo: {
+        page: pageNum,
+        total: anime.totalEps,
+        nextPage: anime.totalEps > pageNum * prPage,
+      },
     },
-  });
+    200,
+  );
 });
 
 export default route;
