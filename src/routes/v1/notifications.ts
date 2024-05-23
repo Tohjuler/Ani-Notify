@@ -124,7 +124,7 @@ route.openapi(getRoute, async (c) => {
             },
           },
         },
-        createdAt: {
+        releaseAt: {
           gte: new Date(
             new Date().getTime() -
               parseInt(process.env.NEW_EP_TIME || "5") * 24 * 60 * 60 * 1000,
