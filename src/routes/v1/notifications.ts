@@ -1,8 +1,8 @@
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import * as Sentry from "@sentry/bun";
+import { z } from "zod";
 import db from "../../lib/db";
 import { getNewEps } from "../../util/consumet";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { z } from "zod";
-import * as Sentry from "@sentry/bun";
 
 const route = new OpenAPIHono();
 

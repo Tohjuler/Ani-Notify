@@ -3,7 +3,6 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { addAnimeToUser } from "../../util/animeUtil";
-import { Episode } from "@prisma/client";
 
 const route = new OpenAPIHono();
 

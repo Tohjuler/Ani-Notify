@@ -1,14 +1,14 @@
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { User } from "@prisma/client";
+import * as Sentry from "@sentry/bun";
+import { z } from "zod";
 import db from "../../lib/db";
+import { getUserId, updateUser } from "../../util/aniListUtil";
 import {
   AnimesRes,
   addAnime,
-  addAnimesIfNotFound as addAnimesIfNotFound,
+  addAnimesIfNotFound,
 } from "../../util/animeUtil";
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { z } from "zod";
-import * as Sentry from "@sentry/bun";
-import { getUserId, updateUser } from "../../util/aniListUtil";
 
 const route = new OpenAPIHono();
 

@@ -1,14 +1,14 @@
+import { prometheus } from "@hono/prometheus";
+import { swaggerUI } from "@hono/swagger-ui";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import * as Sentry from "@sentry/bun";
+import { bearerAuth } from "hono/bearer-auth";
+import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { swaggerUI } from "@hono/swagger-ui";
-import { prometheus } from "@hono/prometheus";
-import { bearerAuth } from "hono/bearer-auth";
-import { cors } from "hono/cors";
-import * as Sentry from "@sentry/bun";
-import startCron from "./util/cronChecks";
 import { performUserUpdate } from "./util/aniListUtil";
+import startCron from "./util/cronChecks";
 
 const app = new OpenAPIHono();
 

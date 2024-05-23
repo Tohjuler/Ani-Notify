@@ -1,7 +1,6 @@
 import { Anime, Episode, User } from "@prisma/client";
 import db from "../lib/db";
 import { addEps, fetchAnimeInfo, getNewEps } from "./consumet";
-import { EventHint } from "@sentry/bun";
 import * as Sentry from "@sentry/bun";
 import sendNotifications from "./notifications";
 import { isWithin } from "./util";
