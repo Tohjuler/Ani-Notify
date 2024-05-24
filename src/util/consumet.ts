@@ -109,9 +109,11 @@ export async function getNewEps(
     else combinedEps.push(ep);
   }
 
-  // Check if the totalAmount of is reached
-  if (isFinished(anime, newEps, false) && isFinished(anime, newEps, true))
-    // Dub and Sub is finished
+  // Check if the totalAmount of is reached or the status is NOT_YET_RELEASE and there is more than 1 ep
+  if (
+    (isFinished(anime, newEps, false) && isFinished(anime, newEps, true)) 
+    || (anime.status === "NOT_YET_RELEASED" && combinedEps.length > 1)
+  )
     updateStatus(anime);
 
   return combinedEps;
@@ -231,34 +233,25 @@ async function updateStatus(anime: Anime) {
     return;
   }
 
-  if (newInfo.status !== anime.status) {
-    await db.anime
+  if (
+    newInfo.status === anime.status 
+    && newInfo.totalEps === anime.totalEps
+    && newInfo.title === anime.title
+  ) return;
+
+  await db.anime
       .update({
         where: {
           id: anime.id,
         },
         data: {
-          status: newInfo.status,
+          ...(newInfo.status !== anime.status ? {status: newInfo.status} : {}),
+          ...(newInfo.totalEps !== anime.totalEps ? {totalEps: newInfo.totalEps} : {}),
+          ...(newInfo.title !== anime.title ? {title: newInfo.title} : {}),
         },
       })
       .catch((e) => Sentry.captureException(e));
     console.log(
-      `Updated status for ${anime.id} | ${anime.status} > ${newInfo.status}`,
+      `Updated info for ${anime.id}${newInfo.status !== anime.status ? ` | status: ${anime.status} -> ${newInfo.status}` : ""}${newInfo.totalEps !== anime.totalEps ? ` | totalEps: ${anime.totalEps} -> ${newInfo.totalEps}` : ""}${newInfo.title !== anime.title ? ` | title: ${anime.title} -> ${newInfo.title}` : ""}`
     );
-  }
-  if (newInfo.totalEps !== anime.totalEps) {
-    await db.anime
-      .update({
-        where: {
-          id: anime.id,
-        },
-        data: {
-          totalEps: newInfo.totalEps,
-        },
-      })
-      .catch((e) => Sentry.captureException(e));
-    console.log(
-      `Updated total episodes for ${anime.id} | ${anime.totalEps} > ${newInfo.totalEps}`,
-    );
-  }
 }
