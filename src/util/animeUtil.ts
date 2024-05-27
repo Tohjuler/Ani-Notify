@@ -7,8 +7,8 @@ import { isWithin } from "./util";
 
 export async function addAnime(id: string, user?: User) {
   const anime = await fetchAnimeInfo(id);
-  if (!anime) throw new Error("Anime not found");
-  if (anime.status === "FINISHED") throw new Error("Anime is finished");
+  if (!anime) return;
+  if (anime.status === "FINISHED") return;
   if (!anime.totalEps) anime.totalEps = 0;
 
   const animeCreateRes = await db.anime
