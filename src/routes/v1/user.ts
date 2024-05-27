@@ -203,7 +203,7 @@ route.openapi(registerRoute, async (c) => {
     })
     .then((res) => {
       if (addAnimesRes)
-        addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res));
+        addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res).catch(() => {}));
 
       return {
         user: res,
