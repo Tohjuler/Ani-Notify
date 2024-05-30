@@ -111,8 +111,8 @@ export async function getNewEps(
 
   // Check if the totalAmount of is reached or the status is NOT_YET_RELEASE and there is more than 1 ep
   if (
-    (isFinished(anime, newEps, false) && isFinished(anime, newEps, true)) 
-    || (anime.status === "NOT_YET_RELEASED" && combinedEps.length > 1)
+    (isFinished(anime, newEps, false) && isFinished(anime, newEps, true)) ||
+    (anime.status === "NOT_YET_RELEASED" && combinedEps.length > 1)
   )
     updateStatus(anime);
 
@@ -234,24 +234,27 @@ async function updateStatus(anime: Anime) {
   }
 
   if (
-    newInfo.status === anime.status 
-    && newInfo.totalEps === anime.totalEps
-    && newInfo.title === anime.title
-  ) return;
+    newInfo.status === anime.status &&
+    newInfo.totalEps === anime.totalEps &&
+    newInfo.title === anime.title
+  )
+    return;
 
   await db.anime
-      .update({
-        where: {
-          id: anime.id,
-        },
-        data: {
-          ...(newInfo.status !== anime.status ? {status: newInfo.status} : {}),
-          ...(newInfo.totalEps !== anime.totalEps ? {totalEps: newInfo.totalEps} : {}),
-          ...(newInfo.title !== anime.title ? {title: newInfo.title} : {}),
-        },
-      })
-      .catch((e) => Sentry.captureException(e));
-    console.log(
-      `Updated info for ${anime.id}${newInfo.status !== anime.status ? ` | status: ${anime.status} -> ${newInfo.status}` : ""}${newInfo.totalEps !== anime.totalEps ? ` | totalEps: ${anime.totalEps} -> ${newInfo.totalEps}` : ""}${newInfo.title !== anime.title ? ` | title: ${anime.title} -> ${newInfo.title}` : ""}`
-    );
+    .update({
+      where: {
+        id: anime.id,
+      },
+      data: {
+        ...(newInfo.status !== anime.status ? { status: newInfo.status } : {}),
+        ...(newInfo.totalEps !== anime.totalEps
+          ? { totalEps: newInfo.totalEps }
+          : {}),
+        ...(newInfo.title !== anime.title ? { title: newInfo.title } : {}),
+      },
+    })
+    .catch((e) => Sentry.captureException(e));
+  console.log(
+    `Updated info for ${anime.id}${newInfo.status !== anime.status ? ` | status: ${anime.status} -> ${newInfo.status}` : ""}${newInfo.totalEps !== anime.totalEps ? ` | totalEps: ${anime.totalEps} -> ${newInfo.totalEps}` : ""}${newInfo.title !== anime.title ? ` | title: ${anime.title} -> ${newInfo.title}` : ""}`,
+  );
 }

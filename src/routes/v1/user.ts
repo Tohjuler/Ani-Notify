@@ -4,11 +4,7 @@ import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import db from "../../lib/db";
 import { getUserId, updateUser } from "../../util/aniListUtil";
-import {
-  AnimesRes,
-  addAnime,
-  addAnimesIfNotFound,
-} from "../../util/animeUtil";
+import { AnimesRes, addAnime, addAnimesIfNotFound } from "../../util/animeUtil";
 
 const route = new OpenAPIHono();
 
@@ -203,7 +199,9 @@ route.openapi(registerRoute, async (c) => {
     })
     .then((res) => {
       if (addAnimesRes)
-        addAnimesRes.queuedAnime.forEach((id) => addAnime(id, res).catch(() => {}));
+        addAnimesRes.queuedAnime.forEach((id) =>
+          addAnime(id, res).catch(() => {}),
+        );
 
       return {
         user: res,
