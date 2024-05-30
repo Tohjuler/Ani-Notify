@@ -7,8 +7,8 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { performUserUpdate } from "./util/aniListUtil";
 import startCron from "./util/cronChecks";
+import { performAnimeCheck, performNewAnimeCheck } from "./util/animeUtil";
 
 const app = new OpenAPIHono();
 
@@ -117,5 +117,7 @@ app.doc("/doc", {
 app.get("/ui", swaggerUI({ url: "/doc" }));
 
 startCron();
+
+performNewAnimeCheck();
 
 export default app;
