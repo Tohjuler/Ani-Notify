@@ -1,5 +1,5 @@
 {
-  "version": "1.8.3",
+  "version": "1.9.0",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",

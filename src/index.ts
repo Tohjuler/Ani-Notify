@@ -109,7 +109,7 @@ loadApi("v1", "");
 app.doc("/doc", {
   openapi: "3.0.0",
   info: {
-    version: "1.8.3",
+    version: "1.9.0",
     title: "Ani-Notify",
   },
 });
