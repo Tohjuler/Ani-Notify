@@ -51,34 +51,6 @@ app.use(cors());
 if (process.env.API_KEY)
   app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
 
-// I was not able to get the ip. I will try to fix it later
-
-// const rateLimiter = new Map<string, number>();
-// var resetTime: Date = new Date(new Date().getTime() + 60 * 1000);
-
-// // Rate limiter
-// app.use(async (c, next) => {
-//     let ip = (c.env?.address as any).address;
-//     console.log(ip, c.env?.address)
-//     if (!ip) {
-//         return c.json(
-//             { error: "Could not get IP, contact site admin." },
-//             { status: 500 }
-//         );
-//     }
-
-//     if (resetTime.getTime() < new Date().getTime()) {
-//         rateLimiter.clear();
-//         resetTime = new Date(new Date().getTime() + 60 * 1000);
-//     } else {
-//         if ((rateLimiter.get(ip) || 0) >= 60)
-//             return c.text("Too many requests", {status: 429});
-//         else rateLimiter.set(ip, (rateLimiter.get(ip) || 0) + 1);
-//     }
-
-//     await next();
-// });
-
 // Prometheus metrics
 app.get("/metrics", printMetrics);
 
@@ -117,7 +89,5 @@ app.doc("/doc", {
 app.get("/ui", swaggerUI({ url: "/doc" }));
 
 startCron();
-
-performNewAnimeCheck();
 
 export default app;
