@@ -86,7 +86,7 @@ export async function updateUser(user: User, animes: string[]) {
   for (const id of [...plannedList, ...currentList]) {
     if (animes.includes(id)) continue;
 
-    addAnimeToUser(id, user).catch((e) => captureException(e));
+    addAnimeToUser(id, user).catch(() => {});
   }
 }
 
