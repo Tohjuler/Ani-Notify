@@ -1,6 +1,6 @@
-import { expect, test, describe } from "bun:test";
-import app from "../src/index";
 import { User } from "@prisma/client";
+import { describe, expect, test } from "bun:test";
+import app from "../src/index";
 
 const baseApi = "http://localhost/api/v1" as const;
 var tmpUser: User;

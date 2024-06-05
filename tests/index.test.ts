@@ -1,7 +1,7 @@
-import { expect, test, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import app from "../src/index";
-import { isWithin } from "../src/util/util";
 import { getUserId } from "../src/util/aniListUtil";
+import { isWithin } from "../src/util/util";
 
 describe("Main", () => {
   test("/ > 200", async () => {

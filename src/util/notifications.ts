@@ -1,7 +1,7 @@
 import { Anime } from "@prisma/client";
-import { EpisodeInfo } from "./types";
 import axios from "axios";
 import db from "../lib/db";
+import { EpisodeInfo } from "./types";
 
 export default async function sendNotifications(
   anime: Anime,

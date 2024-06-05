@@ -4,7 +4,7 @@
     "dev": "bun run --hot src/index.ts",
     "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",
     "db:init": "prisma generate && prisma migrate deploy",
-    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\""
+    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\" --plugin=prettier-plugin-organize-imports"
   },
   "dependencies": {
     "@hono/prometheus": "^1.0.1",
@@ -16,6 +16,7 @@
     "axios": "^1.7.2",
     "hono": "^4.4.3",
     "node-cron": "^3.0.3",
+    "prettier-plugin-organize-imports": "^3.2.4",
     "prisma": "^5.15.0",
     "prom-client": "^15.1.2",
     "zod": "^3.23.8"

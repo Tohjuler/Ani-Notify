@@ -8,7 +8,6 @@ import { logger } from "hono/logger";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import startCron from "./util/cronChecks";
-import { performAnimeCheck, performNewAnimeCheck } from "./util/animeUtil";
 
 const app = new OpenAPIHono();
 

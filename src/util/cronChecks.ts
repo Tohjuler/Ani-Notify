@@ -1,8 +1,8 @@
-import db from "../lib/db";
-import * as cronIns from "node-cron";
 import * as Sentry from "@sentry/bun";
-import { performAnimeCheck, performNewAnimeCheck } from "./animeUtil";
+import * as cronIns from "node-cron";
+import db from "../lib/db";
 import { performUserUpdate } from "./aniListUtil";
+import { performAnimeCheck, performNewAnimeCheck } from "./animeUtil";
 
 const timezone = process.env.TIMEZONE ?? "Europe/Copenhagen";
 

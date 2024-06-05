@@ -1,7 +1,7 @@
-import db from "../../lib/db";
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
-import { z } from "zod";
 import * as Sentry from "@sentry/bun";
+import { z } from "zod";
+import db from "../../lib/db";
 import { addAnimeToUser } from "../../util/animeUtil";
 
 const route = new OpenAPIHono();

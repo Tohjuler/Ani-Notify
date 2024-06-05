@@ -1,7 +1,7 @@
+import { User } from "@prisma/client";
+import { captureException } from "@sentry/bun";
 import axios from "axios";
 import db from "../lib/db";
-import { captureException } from "@sentry/bun";
-import { User } from "@prisma/client";
 import { addAnimeToUser } from "./animeUtil";
 
 export async function getUserId(username: string): Promise<string | null> {

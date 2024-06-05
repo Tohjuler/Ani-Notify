@@ -1,8 +1,8 @@
 import type { Anime, Episode } from "@prisma/client";
-import axios from "axios";
-import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
-import db from "../lib/db";
 import * as Sentry from "@sentry/bun";
+import axios from "axios";
+import db from "../lib/db";
+import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 
 const supportedProviders =
   process.env.ANIME_PROVIDERS?.split(",") || (["gogoanime"] as const);
