@@ -14,6 +14,7 @@ const app = new OpenAPIHono();
 const { printMetrics, registerMetrics } = prometheus();
 
 // Middlewares
+// ---
 if (process.env.DISABLE_SENTRY_DSN !== "true") {
   Sentry.init({
     release: "ani-notify@" + process.env.npm_package_version,
@@ -51,11 +52,17 @@ if (process.env.API_KEY)
   app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
 
 // Prometheus metrics
+// ---
 app.get("/metrics", printMetrics);
 
+// Index
+// ---
 app.get("/", async (c) => {
   return c.render(fs.readFileSync("./src/routes/index.html", "utf-8"));
 });
+
+// Routes
+// ---
 const loadApi = (ver: string, alias?: string) => {
   const routesPath = path.join(__dirname, "routes", ver);
   for (const file of fs
@@ -76,6 +83,7 @@ const loadApi = (ver: string, alias?: string) => {
 loadApi("v1", "");
 
 // Docs
+// ---
 
 app.doc("/doc", {
   openapi: "3.0.0",
@@ -87,6 +95,8 @@ app.doc("/doc", {
 
 app.get("/ui", swaggerUI({ url: "/doc" }));
 
+// Start cron jobs
+// ---
 startCron();
 
 export default app;

@@ -1,70 +1,21 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { User } from "@prisma/client";
 import * as Sentry from "@sentry/bun";
-import { z } from "zod";
 import db from "../../lib/db";
 import { getUserId, updateUser } from "../../util/aniListUtil";
 import { AnimesRes, addAnime, addAnimesIfNotFound } from "../../util/animeUtil";
+import {
+  DeleteRoute,
+  GetRoute,
+  RegisterRoute,
+  UpdateRoute,
+} from "./types/user_types";
 
 const route = new OpenAPIHono();
 
 // GET /user/{id}/{username}
 
-const getRoute = createRoute({
-  method: "get",
-  path: "/{id}/{username}",
-  request: {
-    params: z.object({
-      id: z.string().openapi({
-        param: {
-          name: "id",
-          in: "path",
-        },
-        type: "string",
-        example: "27657382-e166-4ddc-851f-7f51de93775d",
-      }),
-      username: z.string().openapi({
-        param: {
-          name: "username",
-          in: "path",
-        },
-        type: "string",
-        example: "tohjuler",
-      }),
-    }),
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            id: z.string(),
-            username: z.string(),
-            discord_webhook: z.string().nullable(),
-            ntfy_url: z.string().nullable(),
-
-            createdAt: z.string(),
-            updatedAt: z.string(),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    404: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string().default("User not found"),
-          }),
-        },
-      },
-      description: "Not Found",
-    },
-  },
-  tags: ["User"],
-});
-
-route.openapi(getRoute, async (c) => {
+route.openapi(GetRoute, async (c) => {
   const { id, username } = c.req.valid("param");
 
   const user = await db.user
@@ -79,82 +30,7 @@ route.openapi(getRoute, async (c) => {
 
 // POST /user/register
 
-const registerRoute = createRoute({
-  method: "post",
-  path: "/register",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              id: z.string().optional(),
-              username: z.string(),
-              discord_webhook: z.string().optional(),
-              ntfy_url: z.string().optional(),
-              animes: z.array(z.string()).optional(),
-              anilist: z.string().optional(),
-            })
-            .openapi({
-              required: ["username"],
-            }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-            user: z.object({
-              id: z.string(),
-              username: z.string(),
-              discord_webhook: z.string().optional(),
-              ntfy_url: z.string().optional(),
-              anilist_id: z.string().optional(),
-              createdAt: z.string(),
-              updatedAt: z.string(),
-            }),
-            failedAnimes: z.array(z.string()).optional().openapi({
-              description:
-                "Animes that failed to fetch, is it must likely because they don't exist.",
-            }),
-            queuedAnimes: z.array(z.string()).optional().openapi({
-              description:
-                "Animes that are queued to be fetched, it will be done within 2-3 minutes.",
-            }),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    400: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string().default("Username already taken"),
-          }),
-        },
-      },
-      description: "Bad Request",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["User"],
-});
-
-route.openapi(registerRoute, async (c) => {
+route.openapi(RegisterRoute, async (c) => {
   const { id, username, discord_webhook, ntfy_url, animes, anilist } =
     c.req.valid("json");
 
@@ -241,63 +117,6 @@ route.openapi(registerRoute, async (c) => {
 
 // PUT /user/update
 
-const UpdateRoute = createRoute({
-  method: "put",
-  path: "/update",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              id: z.string(),
-              username: z.string(),
-              discord_webhook: z.string().optional(),
-              ntfy_url: z.string().optional(),
-              anilist: z.string().optional(),
-            })
-            .openapi({
-              required: ["id", "username"],
-            }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    403: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string().default("Editing is disabled"),
-          }),
-        },
-      },
-      description: "Forbidden",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["User"],
-});
-
 route.openapi(UpdateRoute, async (c) => {
   const { id, username, discord_webhook, ntfy_url, anilist } =
     c.req.valid("json");
@@ -327,61 +146,7 @@ route.openapi(UpdateRoute, async (c) => {
 
 // DELETE /user/delete
 
-const deleteRoute = createRoute({
-  method: "delete",
-  path: "/delete",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              id: z.string(),
-              username: z.string(),
-            })
-            .openapi({
-              required: ["id", "username"],
-            }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    403: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string().default("Deletion is disabled"),
-          }),
-        },
-      },
-      description: "Forbidden",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["User"],
-});
-
-route.openapi(deleteRoute, async (c) => {
+route.openapi(DeleteRoute, async (c) => {
   const { id, username } = await c.req.json();
 
   if (process.env.ALLOW_DELETE !== "true")

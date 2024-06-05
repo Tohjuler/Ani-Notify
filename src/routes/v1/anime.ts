@@ -1,76 +1,20 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import * as Sentry from "@sentry/bun";
-import { z } from "zod";
 import db from "../../lib/db";
 import { addAnimeToUser } from "../../util/animeUtil";
+import {
+  CurrentlyTrackingRoute,
+  ResentEpisode,
+  ResentEpisodesRoute,
+  SubscribeRoute,
+  UnsubscribeRoute,
+} from "./types/anime_types";
 
 const route = new OpenAPIHono();
 
-// post /anime/subscribe
+// POST /anime/subscribe
 
-const subscribeRoute = createRoute({
-  method: "post",
-  path: "/subscribe",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              id: z.string(),
-              username: z.string(),
-              animeId: z.string(),
-            })
-            .openapi({
-              required: ["username", "id", "animeId"],
-            }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    404: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-          examples: {
-            "User not found": {
-              value: {
-                error: "User not found",
-              },
-            },
-          },
-        },
-      },
-      description: "Not Found",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["Anime"],
-});
-
-route.openapi(subscribeRoute, async (c) => {
+route.openapi(SubscribeRoute, async (c) => {
   const { id, username, animeId } = c.req.valid("json");
 
   const user = await db.user
@@ -94,76 +38,9 @@ route.openapi(subscribeRoute, async (c) => {
     : c.json({ success: true }, 200);
 });
 
-// post /anime/unsubscribe
+// POST /anime/unsubscribe
 
-const unsubscribeRoute = createRoute({
-  method: "post",
-  path: "/unsubscribe",
-  request: {
-    body: {
-      content: {
-        "application/json": {
-          schema: z
-            .object({
-              id: z.string(),
-              username: z.string(),
-              animeId: z.string(),
-            })
-            .openapi({
-              required: ["username", "id", "animeId"],
-            }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            success: z.boolean(),
-          }),
-        },
-      },
-      description: "Ok Response",
-    },
-    404: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-          examples: {
-            "User not found": {
-              value: {
-                error: "User not found",
-              },
-            },
-            "Anime not found": {
-              value: {
-                error: "Anime not found",
-              },
-            },
-          },
-        },
-      },
-      description: "Not Found",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["Anime"],
-});
-
-route.openapi(unsubscribeRoute, async (c) => {
+route.openapi(UnsubscribeRoute, async (c) => {
   const { id, username, animeId } = c.req.valid("json");
 
   const user = await db.user
@@ -210,44 +87,9 @@ route.openapi(unsubscribeRoute, async (c) => {
   return res ? res : c.json({ success: true }, 200);
 });
 
-const currentlyTrackingRoute = createRoute({
-  method: "get",
-  path: "/currently-tracking",
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.array(
-            z.object({
-              id: z.string(),
-              title: z.string().nullable(),
-              subEpisodes: z.number(),
-              dubEpisodes: z.number(),
-              totalEpisodes: z.number(),
-              status: z.string(),
-              createdAt: z.string(),
-              updatedAt: z.string(),
-            }),
-          ),
-        },
-      },
-      description: "Ok Response",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["Anime"],
-});
+// GET /anime/currently-tracking
 
-route.openapi(currentlyTrackingRoute, async (c) => {
+route.openapi(CurrentlyTrackingRoute, async (c) => {
   const animes = await db.anime
     .findMany()
     .then(async (res) =>
@@ -278,97 +120,9 @@ route.openapi(currentlyTrackingRoute, async (c) => {
     : c.json({ error: "An error occurred" }, 500);
 });
 
-const resentEpisodesRoute = createRoute({
-  method: "get",
-  path: "/resent-episodes",
-  request: {
-    query: z.object({
-      page: z
-        .string()
-        .optional()
-        .default("1")
-        .openapi({
-          param: {
-            name: "page",
-            in: "query",
-          },
-          type: "string",
-          example: "1",
-        }),
-      prPage: z
-        .string()
-        .optional()
-        .default("15")
-        .openapi({
-          param: {
-            name: "prPage",
-            in: "query",
-          },
-          type: "string",
-          example: "15",
-        }),
-      newEpTime: z
-        .string()
-        .optional()
-        .default("5")
-        .openapi({
-          param: {
-            name: "newEpTime",
-            in: "query",
-          },
-          type: "string",
-          example: "5",
-        }),
-    }),
-  },
-  responses: {
-    200: {
-      content: {
-        "application/json": {
-          schema: z.array(
-            z.object({
-              title: z.string().nullable(),
-              number: z.number(),
-              providers: z.string(),
-              dub: z.boolean(),
-              releasedAt: z.string(),
-              anime: z.object({
-                id: z.string(),
-                title: z.string(),
-              }),
-            }),
-          ),
-        },
-      },
-      description: "Ok Response",
-    },
-    500: {
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-      description: "Internal Server Error",
-    },
-  },
-  tags: ["Anime"],
-});
+// GET /anime/resent-episodes
 
-interface ResentEpisode {
-  title: string | null;
-  number: number;
-  providers: string;
-  dub: boolean;
-  releasedAt: string;
-  anime: {
-    id: string;
-    title: string | null;
-  } | null;
-}
-
-route.openapi(resentEpisodesRoute, async (c) => {
+route.openapi(ResentEpisodesRoute, async (c) => {
   const { page, prPage, newEpTime } = c.req.valid("query");
 
   const pageNum = parseInt(page || "1") || 1;
