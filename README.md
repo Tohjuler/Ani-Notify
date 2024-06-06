@@ -29,6 +29,11 @@ It can also be integrated into a app to handle notifications.
 ## 🔥Endpoints
 Check the [SwaggerUI](https://ani-notify.tohjuler.dk/ui)
 
+### Versions
+``V1``: Focuses on all the endpoint.
+<br>
+``V2``: Focuses on a easy implementation into apps.  
+
 ## 🔨Setup
 
 ### 📊Metrics

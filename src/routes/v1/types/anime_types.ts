@@ -3,6 +3,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 export const SubscribeRoute = createRoute({
   method: "post",
   path: "/subscribe",
+  description: "Subscribe to an anime as a user.",
   request: {
     body: {
       content: {
@@ -65,6 +66,7 @@ export const SubscribeRoute = createRoute({
 export const UnsubscribeRoute = createRoute({
   method: "post",
   path: "/unsubscribe",
+  description: "Unsubscribe from an anime as a user.",
   request: {
     body: {
       content: {
@@ -132,6 +134,7 @@ export const UnsubscribeRoute = createRoute({
 export const CurrentlyTrackingRoute = createRoute({
   method: "get",
   path: "/currently-tracking",
+  description: "Get the anime that is currently getting tracked.",
   responses: {
     200: {
       content: {
@@ -169,6 +172,7 @@ export const CurrentlyTrackingRoute = createRoute({
 export const ResentEpisodesRoute = createRoute({
   method: "get",
   path: "/resent-episodes",
+  description: "Get the resent episodes.",
   request: {
     query: z.object({
       page: z

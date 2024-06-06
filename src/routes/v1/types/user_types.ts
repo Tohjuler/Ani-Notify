@@ -4,6 +4,7 @@ import { z } from "zod";
 export const GetRoute = createRoute({
   method: "get",
   path: "/{id}/{username}",
+  description: "Get a user by id and username.",
   request: {
     params: z.object({
       id: z.string().openapi({
@@ -58,6 +59,7 @@ export const GetRoute = createRoute({
 export const RegisterRoute = createRoute({
   method: "post",
   path: "/register",
+  description: "Register a new user.",
   request: {
     body: {
       content: {
@@ -133,6 +135,7 @@ export const RegisterRoute = createRoute({
 export const UpdateRoute = createRoute({
   method: "put",
   path: "/update",
+  description: "Update a user.",
   request: {
     body: {
       content: {
@@ -190,6 +193,7 @@ export const UpdateRoute = createRoute({
 export const DeleteRoute = createRoute({
   method: "delete",
   path: "/delete",
+  description: "Delete a user.",
   request: {
     body: {
       content: {

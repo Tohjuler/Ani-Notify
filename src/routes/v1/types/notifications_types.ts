@@ -20,6 +20,7 @@ export interface Episode {
 export const GetRoute = createRoute({
   method: "get",
   path: "/{userId}",
+  description: "Get the notifications for a user.",
   request: {
     params: z.object({
       userId: z.string().openapi({
@@ -97,6 +98,7 @@ export const GetRoute = createRoute({
 export const AnimeRoute = createRoute({
   method: "get",
   path: "/anime/{animeId}",
+  description: "Get the notifications for an anime.",
   request: {
     params: z.object({
       animeId: z.string().openapi({

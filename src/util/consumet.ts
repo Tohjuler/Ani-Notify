@@ -4,8 +4,9 @@ import axios from "axios";
 import db from "../lib/db";
 import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 
-const supportedProviders =
-  process.env.ANIME_PROVIDERS?.split(",") || ["gogoanime"];
+const supportedProviders = process.env.ANIME_PROVIDERS?.split(",") || [
+  "gogoanime",
+];
 
 function epsUrl(id: string, dub: boolean, provider: string): string {
   return `${process.env.CONSUMET_URL}/meta/anilist/episodes/${id}?dub=${dub}&provider=${provider}`;

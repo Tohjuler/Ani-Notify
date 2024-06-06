@@ -70,19 +70,25 @@ setupDefauls();
 // ---
 const loadApi = (ver: string, alias?: string) => {
   const routesPath = path.join(__dirname, "routes", ver);
+  const router = new OpenAPIHono();
   for (const file of fs
     .readdirSync(routesPath)
     .filter((f) => f.endsWith(".ts"))) {
-    app.route(
-      "/api/" + ver + "/" + file.replace(".ts", ""),
+    router.route(
+      "/" + file.replace(".ts", ""),
       require(path.join(routesPath, file)).default,
     );
-    if (alias)
-      app.route(
-        "/api/" + (alias === "" ? "" : alias + "/") + file.replace(".ts", ""),
-        require(path.join(routesPath, file)).default,
-      );
   }
+  router.doc("/doc", {
+    openapi: "3.0.0",
+    info: {
+      version: ver,
+      title: "Ani-Notify",
+    },
+  });
+
+  app.route("/api/" + ver, router);
+  app.route("/api/" + (alias === "" ? "" : alias + "/"), router);
 };
 
 loadApi("v1", "");
@@ -98,7 +104,11 @@ app.doc("/doc", {
   },
 });
 
-app.get("/ui", swaggerUI({ url: "/doc" }));
+const swaggerV1 = swaggerUI({
+  url: "/api/v1/doc",
+});
+app.get("/ui", swaggerV1);
+app.get("/ui/v1", swaggerV1);
 
 // Start cron jobs
 // ---
