@@ -18,6 +18,8 @@ jobs:
 
       - uses: oven-sh/setup-bun@v1
       - run: cp .env.example .env
+      # set DATABASE_URL to the test database
+      - run: sed -i 's/DATABASE_URL=.*/DATABASE_URL=${{ secrets.TEST_DB_STRING }}/' .env
       - run: bun install -p
       - run: bun run db:init
       # - run: bun test # The user tests can't be runned in github actions
