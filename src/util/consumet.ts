@@ -5,7 +5,7 @@ import db from "../lib/db";
 import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 
 const supportedProviders =
-  process.env.ANIME_PROVIDERS?.split(",") || (["gogoanime"] as const);
+  process.env.ANIME_PROVIDERS?.split(",") || ["gogoanime"];
 
 function epsUrl(id: string, dub: boolean, provider: string): string {
   return `${process.env.CONSUMET_URL}/meta/anilist/episodes/${id}?dub=${dub}&provider=${provider}`;
@@ -176,7 +176,6 @@ export async function addEps(animeId: string) {
   };
 
   for (const provider of supportedProviders) {
-    // TODO: Add 404 and error handling.
     const epsSub: ConsumetEpisode[] = await axios
       .get(epsUrl(animeId, false, provider))
       .then((res) => res.data)

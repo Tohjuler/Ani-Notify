@@ -8,6 +8,7 @@ import { logger } from "hono/logger";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import startCron from "./util/cronChecks";
+import { setupDefauls } from "./util/settingsHandler";
 
 const app = new OpenAPIHono();
 
@@ -60,6 +61,10 @@ app.get("/metrics", printMetrics);
 app.get("/", async (c) => {
   return c.render(fs.readFileSync("./src/routes/index.html", "utf-8"));
 });
+
+// Init Settings
+// ---
+setupDefauls();
 
 // Routes
 // ---
