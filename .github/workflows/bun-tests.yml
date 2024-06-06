@@ -10,15 +10,13 @@ permissions:
 jobs:
   test:
     runs-on: self-hosted
-    container:
-      image: catthehacker/ubuntu:act-latest
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v1
       - run: cp .env.example .env
-      - run: sed -i 's@DATABASE_URL=.*@DATABASE_URL=${{ secrets.TEST_DB_STRING }}@' .env
+      - run: sed -i 's|DATABASE_URL=.*|DATABASE_URL=${{ secrets.TEST_DB_STRING }}|' .env
       - run: bun install -p
       - run: bun run db:init
       # - run: bun test # The user tests can't be runned in github actions
