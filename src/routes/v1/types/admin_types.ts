@@ -18,6 +18,7 @@ export const SettingsRoute = createRoute({
               key: z.string(),
               value: z.string(),
               default: z.string(),
+              description: z.string(),
 
               createdAt: z.string(),
               updatedAt: z.string(),
@@ -69,6 +70,7 @@ export const GetSettingRoute = createRoute({
           schema: z.object({
             value: z.string(),
             default: z.string(),
+            description: z.string(),
 
             createdAt: z.string(),
             updatedAt: z.string(),

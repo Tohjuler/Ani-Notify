@@ -2,7 +2,6 @@ import { prometheus } from "@hono/prometheus";
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import * as Sentry from "@sentry/bun";
-import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import * as fs from "node:fs";
@@ -51,9 +50,6 @@ if (process.env.DISABLE_SENTRY_DSN !== "true") {
 app.use(logger());
 app.use("*", registerMetrics);
 app.use(cors());
-
-if (process.env.API_KEY)
-  app.use("/api/*", bearerAuth({ token: process.env.API_KEY }));
 
 // Prometheus metrics
 // ---

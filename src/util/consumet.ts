@@ -2,6 +2,7 @@ import type { Anime, Episode } from "@prisma/client";
 import * as Sentry from "@sentry/bun";
 import axios from "axios";
 import db from "../lib/db";
+import { getSetting } from "./settingsHandler";
 import { AnimeInfo, AnimeStatus, ConsumetEpisode, EpisodeInfo } from "./types";
 
 const supportedProviders = process.env.ANIME_PROVIDERS?.split(",") || [
@@ -202,7 +203,7 @@ export async function fetchAnimeInfo(
 ): Promise<AnimeInfo | undefined> {
   return await axios
     .get(`${process.env.CONSUMET_URL}/meta/anilist/info/${id}`)
-    .then((res) => {
+    .then(async (res) => {
       let status: AnimeStatus = "NOT_YET_RELEASED";
       switch (res.data.status) {
         case "Completed":
@@ -218,7 +219,7 @@ export async function fetchAnimeInfo(
 
       return {
         id: res.data.id,
-        title: res.data.title[process.env.TITLE_TYPE || "english"],
+        title: res.data.title[(await getSetting("TITLE_TYPE")) || "english"],
         status,
         totalEps: res.data.totalEpisodes ?? 0,
       } as AnimeInfo;

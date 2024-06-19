@@ -11,6 +11,11 @@ const defaultSettings: {
     default: "true",
     description: "Allow users to delete their account.",
   },
+  NEW_EP_TIME: {
+    default: "5",
+    description:
+      "The amount of days where a episode is considered new, and will be shows in notifications",
+  },
   TITLE_TYPE: {
     default: "english",
     description: 'The title type, can be "english", "romaji" and "native".',

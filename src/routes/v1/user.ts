@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/bun";
 import db from "../../lib/db";
 import { getUserId, updateUser } from "../../util/aniListUtil";
 import { AnimesRes, addAnime, addAnimesIfNotFound } from "../../util/animeUtil";
+import { getSetting } from "../../util/settingsHandler";
 import {
   DeleteRoute,
   GetRoute,
@@ -121,7 +122,7 @@ route.openapi(UpdateRoute, async (c) => {
   const { id, username, discord_webhook, ntfy_url, anilist } =
     c.req.valid("json");
 
-  if (process.env.ALLOW_EDIT !== "true")
+  if ((await getSetting("ALLOW_EDIT")) !== "true")
     return c.json({ error: "Editing is disabled" }, 403);
 
   const aniListId = anilist ? await getUserId(anilist) : null;
@@ -149,7 +150,7 @@ route.openapi(UpdateRoute, async (c) => {
 route.openapi(DeleteRoute, async (c) => {
   const { id, username } = await c.req.json();
 
-  if (process.env.ALLOW_DELETE !== "true")
+  if ((await getSetting("ALLOW_DELETE")) !== "true")
     return c.json({ error: "Deletion is disabled" }, 403);
 
   const res = await db.user

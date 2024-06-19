@@ -1,7 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { bearerAuth } from "hono/bearer-auth";
 import db from "../../lib/db";
-import { getDefault } from "../../util/settingsHandler";
+import { restartCron } from "../../util/cronChecks";
+import { getDefault, getDescription } from "../../util/settingsHandler";
 import { generateString } from "../../util/util";
 import {
   DeleteKeysRoute,
@@ -32,6 +33,8 @@ route.openapi(SettingsRoute, async (c) => {
     key: s.key,
     value: s.value,
     default: getDefault(s.key),
+    description: getDescription(s.key),
+
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
   }));
@@ -49,6 +52,7 @@ route.openapi(GetSettingRoute, async (c) => {
       key: setting.key,
       value: setting.value,
       default: getDefault(setting.key),
+      description: getDescription(setting.key),
 
       createdAt: setting.createdAt.toISOString(),
       updatedAt: setting.updatedAt.toISOString(),
@@ -70,6 +74,16 @@ route.openapi(PutSettingRoute, async (c) => {
     },
   });
 
+  if (
+    id.startsWith("AUTO_REGISTER") ||
+    id.startsWith("INTELLIGENT_") ||
+    id === "CRON" ||
+    id === "ANILIST_UPDATE_CRON"
+  ) {
+    restartCron();
+    console.log("Restarted cron");
+  }
+
   return c.json({ success: true }, 200);
 });
 
@@ -84,6 +98,16 @@ route.openapi(DeleteSettingRoute, async (c) => {
       value: getDefault(id),
     },
   });
+
+  if (
+    id.startsWith("AUTO_REGISTER") ||
+    id.startsWith("INTELLIGENT_") ||
+    id === "CRON" ||
+    id === "ANILIST_UPDATE_CRON"
+  ) {
+    restartCron();
+    console.log("Restarted cron");
+  }
 
   return c.json({ success: true }, 200);
 });

@@ -3,10 +3,11 @@ import * as cronIns from "node-cron";
 import db from "../lib/db";
 import { performUserUpdate } from "./aniListUtil";
 import { performAnimeCheck, performNewAnimeCheck } from "./animeUtil";
+import { getSetting } from "./settingsHandler";
 
 const timezone = process.env.TIMEZONE ?? "Europe/Copenhagen";
 
-export default function startCron() {
+export default async function startCron() {
   const cron =
     process.env.DISABLE_SENTRY_DSN === "true" ||
     process.env.NODE_ENV !== "production"
@@ -14,12 +15,11 @@ export default function startCron() {
       : Sentry.cron.instrumentNodeCron(cronIns);
 
   if (
-    process.env.CRON &&
-    (!process.env.INTELLIGENT_CHECKS ||
-      process.env.INTELLIGENT_CHECKS === "false")
+    (await getSetting("CRON")) &&
+    (await getSetting("INTELLIGENT_CHECKS")) === "false"
   )
     cron.schedule(
-      process.env.CRON,
+      await getSetting("CRON"),
       async () => {
         Sentry.withMonitor("Default-Check", async () => {
           await performAnimeCheck();
@@ -28,11 +28,13 @@ export default function startCron() {
       { name: "Default-Check", timezone },
     );
   else {
-    const minDays = parseInt(process.env.INTELLIGENT_MIN_DAYS ?? "5");
-    const maxDays = parseInt(process.env.INTELLIGENT_MAX_DAYS ?? "10");
+    const minDays = parseInt((await getSetting("INTELLIGENT_MIN_DAYS")) ?? "5");
+    const maxDays = parseInt(
+      (await getSetting("INTELLIGENT_MAX_DAYS")) ?? "10",
+    );
 
     cron.schedule(
-      process.env.INTELLIGENT_CRON ?? "*/60 * * * *",
+      (await getSetting("INTELLIGENT_CRON")) ?? "*/60 * * * *",
       async () => {
         Sentry.withMonitor("Intelligent-Check", async () => {
           performAnimeCheck(minDays, maxDays);
@@ -76,7 +78,7 @@ export default function startCron() {
 
   // Anilist Update - 00:00
   cron.schedule(
-    process.env.ANILIST_UPDATE_CRON ?? "0 0 * * *",
+    (await getSetting("ANILIST_UPDATE_CRON")) ?? "0 0 * * *",
     async () => {
       Sentry.withMonitor("Anilist-Update", async () => {
         await performUserUpdate();
@@ -86,9 +88,9 @@ export default function startCron() {
   );
 
   // Auto register
-  if (process.env.AUTO_REGISTER === "true")
+  if ((await getSetting("AUTO_REGISTER")) === "true")
     cron.schedule(
-      process.env.AUTO_REGISTER_CRON ?? "0 0 * * *",
+      (await getSetting("AUTO_REGISTER_CRON")) ?? "0 0 * * *",
       async () => {
         Sentry.withMonitor("Auto-Register", async () => {
           await performNewAnimeCheck();
@@ -96,4 +98,10 @@ export default function startCron() {
       },
       { name: "Auto-Register", timezone },
     );
+}
+
+export function restartCron() {
+  cronIns.getTasks().forEach((task) => task.stop());
+  cronIns.getTasks().clear();
+  startCron();
 }

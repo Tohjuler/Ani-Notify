@@ -3,6 +3,7 @@ import { captureException } from "@sentry/bun";
 import axios from "axios";
 import db from "../lib/db";
 import { addAnimeToUser } from "./animeUtil";
+import { getSetting } from "./settingsHandler";
 
 export async function getUserId(username: string): Promise<string | null> {
   if (!isNaN(parseInt(username))) return username;
@@ -127,7 +128,7 @@ export async function fetchAiringAnimes(page: number = 1): Promise<string[]> {
   // 3 days in seconds
   const to =
     from +
-    (parseInt(process.env.AUTO_REGISTER_CHECK_DAYS as string) || 2) *
+    (parseInt((await getSetting("AUTO_REGISTER_CHECK_DAYS")) as string) || 2) *
       24 *
       60 *
       60;

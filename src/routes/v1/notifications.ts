@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import * as Sentry from "@sentry/bun";
 import db from "../../lib/db";
 import { getNewEps } from "../../util/consumet";
+import { getSetting } from "../../util/settingsHandler";
 import { AnimeRoute, Episode, GetRoute } from "./types/notifications_types";
 
 const route = new OpenAPIHono();
@@ -34,7 +35,11 @@ route.openapi(GetRoute, async (c) => {
         releaseAt: {
           gte: new Date(
             new Date().getTime() -
-              parseInt(process.env.NEW_EP_TIME || "5") * 24 * 60 * 60 * 1000,
+              parseInt((await getSetting("NEW_EP_TIME")) || "5") *
+                24 *
+                60 *
+                60 *
+                1000,
           ), // Default 5 days
         },
       },
@@ -72,7 +77,10 @@ route.openapi(GetRoute, async (c) => {
     });
 
   // Check for new episodes, if the cron job is not running
-  if (!process.env.CRON && process.env.INTELLIGENT_CHECKS === "false")
+  if (
+    !(await getSetting("CRON")) &&
+    (await getSetting("INTELLIGENT_CHECKS")) === "false"
+  )
     await db.anime
       .findMany({
         where: {
@@ -124,7 +132,11 @@ route.openapi(GetRoute, async (c) => {
       createdAt: {
         gte: new Date(
           new Date().getTime() -
-            parseInt(process.env.NEW_EP_TIME || "5") * 24 * 60 * 60 * 1000,
+            parseInt((await getSetting("NEW_EP_TIME")) || "5") *
+              24 *
+              60 *
+              60 *
+              1000,
         ), // Default 5 days
       },
     },
