@@ -224,10 +224,12 @@ export const ResentEpisodesRoute = createRoute({
               providers: z.string(),
               dub: z.boolean(),
               releasedAt: z.string(),
-              anime: z.object({
-                id: z.string(),
-                title: z.string().nullable(),
-              }).nullable(),
+              anime: z
+                .object({
+                  id: z.string(),
+                  title: z.string().nullable(),
+                })
+                .nullable(),
             }),
           ),
         },
