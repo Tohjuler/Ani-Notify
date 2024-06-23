@@ -18,7 +18,7 @@ jobs:
       - name: Setup repo
         uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
       - run: cp .env.example .env
       - run: bun install -p
       - run: bun run db:init
