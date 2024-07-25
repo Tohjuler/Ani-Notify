@@ -1,27 +1,28 @@
 {
-  "version": "1.9.3",
-  "scripts": {
-    "dev": "bun run --hot src/index.ts",
-    "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",
-    "db:init": "prisma generate && prisma migrate deploy",
-    "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\" --plugin=prettier-plugin-organize-imports"
-  },
-  "dependencies": {
-    "@hono/prometheus": "^1.0.1",
-    "@hono/swagger-ui": "^0.4.0",
-    "@hono/zod-openapi": "^0.15.0",
-    "@prisma/client": "^5.15.0",
-    "@sentry/bun": "^8.7.0",
-    "@types/node-cron": "^3.0.11",
-    "axios": "^1.7.2",
-    "hono": "^4.4.3",
-    "node-cron": "^3.0.3",
-    "prettier-plugin-organize-imports": "^4.0.0",
-    "prisma": "^5.15.0",
-    "prom-client": "^15.1.2",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+    "version": "1.9.3",
+    "scripts": {
+        "dev": "bun run --hot src/index.ts",
+        "start": "prisma generate && prisma migrate deploy && bun run src/index.ts",
+        "db:init": "prisma generate && prisma migrate deploy",
+        "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\" --plugin=prettier-plugin-organize-imports",
+        "format": "npx @biomejs/biome check --write ./src ./tests"
+    },
+    "dependencies": {
+        "@hono/prometheus": "^1.0.1",
+        "@hono/swagger-ui": "^0.4.0",
+        "@hono/zod-openapi": "^0.15.0",
+        "@prisma/client": "^5.15.0",
+        "@sentry/bun": "^8.7.0",
+        "@types/node-cron": "^3.0.11",
+        "axios": "^1.7.2",
+        "hono": "^4.4.3",
+        "node-cron": "^3.0.3",
+        "prettier-plugin-organize-imports": "^4.0.0",
+        "prisma": "^5.15.0",
+        "prom-client": "^15.1.2",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    }
 }
