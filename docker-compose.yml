@@ -7,6 +7,8 @@ services:
     image: ghcr.io/tohjuler/ani-notify:latest
     links:
       - consumet:consumet
+    env_file:
+      - stack.env
     volumes:
       - ./stack.env:/usr/src/app/.env
       - db:/usr/src/app/db/
