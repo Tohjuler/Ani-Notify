@@ -12,7 +12,7 @@
         "@hono/swagger-ui": "^0.4.0",
         "@hono/zod-openapi": "^0.16.0",
         "@prisma/client": "^5.15.0",
-        "@sentry/bun": "^8.7.0",
+        "@sentry/bun": "^8.49.0",
         "@types/node-cron": "^3.0.11",
         "axios": "^1.7.2",
         "hono": "^4.6.5",
